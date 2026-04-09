@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Visualization - Car Maintenance</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="app">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="logo">🚗</span>
+                <span>Car Maintenance Visualizer</span>
+            </div>
+            <div class="nav-menu">
+                <a href="/dashboard.html" class="nav-link">Dashboard</a>
+                <a href="/visualization.html" class="nav-link active">3D Visualization</a>
+                <a href="/history.html" class="nav-link">Service History</a>
+                <a href="/reports.html" class="nav-link">Reports</a>
+                <div class="user-menu">
+                    <span class="user-name" id="userName"></span>
+                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content viz-container">
+            <div class="car-canvas-area">
+                <canvas id="carCanvas" width="700" height="450"></canvas>
+                <div class="hint">🖱️ Click on any colored part</div>
+            </div>
+            <div class="info-panel" id="infoPanel">
+                <div class="panel-header">
+                    <div class="led"></div>
+                    <span>INSPECTION SYSTEM</span>
+                </div>
+                <div class="placeholder">
+                    <div>🚗</div>
+                    <div>SELECT A COMPONENT</div>
+                    <div>Click on any part of the vehicle</div>
+                </div>
+                <input type="number" id="mileageInput" placeholder="Update mileage (km)">
+                <button id="updateMileageBtn">UPDATE MILEAGE</button>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 Car Maintenance Visualizer. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/visualization.js"></script>
+</body>
+</html>
