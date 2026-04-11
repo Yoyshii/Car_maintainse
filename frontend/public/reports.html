@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Отчеты - Car Maintenance</title>
     <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="app">
@@ -26,13 +27,84 @@
         </nav>
 
         <main class="main-content">
-            <div class="stats-grid">
-                <div class="stat-card"><div class="value" id="reportTotalCost">$6,200</div><div class="label">Всего потрачено</div></div>
-                <div class="stat-card"><div class="value" id="reportAvgCost">$775</div><div class="label">В среднем в месяц</div></div>
-                <div class="stat-card"><div class="value" id="reportMileage">15,247</div><div class="label">Текущий пробег</div></div>
-                <div class="stat-card"><div class="value" id="reportNextService">2,500</div><div class="label">До следующего ТО</div></div>
+            <h2>📊 Отчеты и аналитика</h2>
+            
+            <div class="stats-grid" style="margin-top: 30px;">
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="reportTotalCost">₽6,200</div>
+                        <div class="stat-label">Всего потрачено</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="reportAvgCost">₽775</div>
+                        <div class="stat-label">В среднем в месяц</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="reportMileage">15,247</div>
+                        <div class="stat-label">Текущий пробег</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏰</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="reportNextService">2,500</div>
+                        <div class="stat-label">До следующего ТО (км)</div>
+                    </div>
+                </div>
             </div>
-            <button id="exportBtn" class="export-btn">ЭКСПОРТ ОТЧЕТА</button>
+
+            <div style="display: flex; gap: 20px; margin: 30px 0; flex-wrap: wrap;">
+                <button id="exportExcelBtn" class="btn btn-success" style="display: inline-flex; align-items: center; gap: 8px; width: auto;">
+                    📎 Экспорт в Excel
+                </button>
+                <button id="exportFullReportBtn" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; width: auto;">
+                    📄 Полный отчет
+                </button>
+                <button id="printReportBtn" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 8px; width: auto;">
+                    🖨️ Печать отчета
+                </button>
+            </div>
+
+            <div class="recent-card">
+                <h3>📋 Детализация расходов по месяцам</h3>
+                <div id="expenseChart" style="margin-top: 20px;">
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: space-around;">
+                        <div style="flex: 1; text-align: center;">
+                            <div style="height: 150px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+                                <div style="width: 50px; height: 120px; background: linear-gradient(180deg, #3b82f6, #60a5fa); border-radius: 10px 10px 0 0; margin-bottom: 10px;"></div>
+                                <div>Январь</div>
+                                <div>₽3,500</div>
+                            </div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="height: 150px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+                                <div style="width: 50px; height: 80px; background: linear-gradient(180deg, #10b981, #34d399); border-radius: 10px 10px 0 0; margin-bottom: 10px;"></div>
+                                <div>Февраль</div>
+                                <div>₽2,000</div>
+                            </div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="height: 150px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+                                <div style="width: 50px; height: 50px; background: linear-gradient(180deg, #f59e0b, #fbbf24); border-radius: 10px 10px 0 0; margin-bottom: 10px;"></div>
+                                <div>Март</div>
+                                <div>₽700</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recent-card" style="margin-top: 30px;">
+                <h3>📋 Последние 10 операций</h3>
+                <div id="operationsList"></div>
+            </div>
         </main>
 
         <footer class="footer">
@@ -42,5 +114,129 @@
 
     <script src="/js/auth.js"></script>
     <script src="/js/common.js"></script>
+    <script>
+        // Данные для отчета
+        const reportData = {
+            totalCost: 6200,
+            avgCost: 775,
+            mileage: 15247,
+            nextService: 2500,
+            operations: [
+                { date: '2024-01-15', service: 'Замена масла', part: 'Двигатель', mileage: 12000, cost: 3500 },
+                { date: '2024-02-01', service: 'Балансировка колес', part: 'Колеса', mileage: 13500, cost: 1200 },
+                { date: '2024-02-10', service: 'Регулировка фар', part: 'Фары', mileage: 14200, cost: 800 },
+                { date: '2024-03-05', service: 'Замена щеток', part: 'Стеклоочистители', mileage: 14800, cost: 700 }
+            ]
+        };
+
+        function exportToExcel() {
+            const data = [
+                ['Отчет по техническому обслуживанию'],
+                ['Дата создания:', new Date().toLocaleString()],
+                [],
+                ['Общая статистика'],
+                ['Показатель', 'Значение'],
+                ['Всего потрачено', reportData.totalCost + ' ₽'],
+                ['Средняя стоимость в месяц', reportData.avgCost + ' ₽'],
+                ['Текущий пробег', reportData.mileage + ' км'],
+                ['До следующего ТО', reportData.nextService + ' км'],
+                [],
+                ['История операций'],
+                ['Дата', 'Услуга', 'Деталь', 'Пробег', 'Стоимость']
+            ];
+            
+            reportData.operations.forEach(op => {
+                data.push([op.date, op.service, op.part, op.mileage + ' км', op.cost + ' ₽']);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Отчет_ТО');
+            XLSX.writeFile(wb, `отчет_ТО_${new Date().toISOString().split('T')[0]}.xlsx`);
+            alert('✅ Отчет успешно экспортирован в Excel!');
+        }
+
+        function printReport() {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head><title>Отчет по ТО</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    h1 { color: #3b82f6; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background: #3b82f6; color: white; }
+                    .stats { display: flex; gap: 20px; margin: 20px 0; }
+                    .stat { background: #f0f0f0; padding: 10px; border-radius: 8px; }
+                </style>
+                </head>
+                <body>
+                <h1>Отчет по техническому обслуживанию</h1>
+                <p>Дата: ${new Date().toLocaleString()}</p>
+                <div class="stats">
+                    <div class="stat"><strong>Всего потрачено:</strong> ${reportData.totalCost} ₽</div>
+                    <div class="stat"><strong>Средняя стоимость:</strong> ${reportData.avgCost} ₽</div>
+                    <div class="stat"><strong>Текущий пробег:</strong> ${reportData.mileage} км</div>
+                </div>
+                <h2>История операций</h2>
+                <table>
+                    <tr><th>Дата</th><th>Услуга</th><th>Деталь</th><th>Пробег</th><th>Стоимость</th></tr>
+                    ${reportData.operations.map(op => `
+                        <tr><td>${op.date}</td><td>${op.service}</td><td>${op.part}</td><td>${op.mileage} км</td><td>${op.cost} ₽</td></tr>
+                    `).join('')}
+                </table>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function showFullReport() {
+            let reportText = '📊 ПОЛНЫЙ ОТЧЕТ ПО ТЕХНИЧЕСКОМУ ОБСЛУЖИВАНИЮ\n';
+            reportText += '='.repeat(50) + '\n\n';
+            reportText += `📅 Дата: ${new Date().toLocaleString()}\n\n`;
+            reportText += `💰 Всего потрачено: ${reportData.totalCost} ₽\n`;
+            reportText += `📊 Средняя стоимость в месяц: ${reportData.avgCost} ₽\n`;
+            reportText += `🚗 Текущий пробег: ${reportData.mileage.toLocaleString()} км\n`;
+            reportText += `⏰ До следующего ТО: ${reportData.nextService.toLocaleString()} км\n\n`;
+            reportText += '='.repeat(50) + '\n';
+            reportText += '📋 ИСТОРИЯ ОПЕРАЦИЙ:\n';
+            reportText += '-'.repeat(50) + '\n';
+            reportData.operations.forEach(op => {
+                reportText += `📅 ${op.date} | ${op.service} | ${op.part} | ${op.mileage} км | ${op.cost} ₽\n`;
+            });
+            alert(reportText);
+        }
+
+        function displayOperations() {
+            const container = document.getElementById('operationsList');
+            if (container) {
+                container.innerHTML = reportData.operations.map(op => `
+                    <div class="service-row">
+                        <span>${op.date}</span>
+                        <span>${op.service}</span>
+                        <span>${op.part}</span>
+                        <span>${op.mileage.toLocaleString()} км</span>
+                        <span style="color: #22c55e;">${op.cost.toLocaleString()} ₽</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            displayOperations();
+            
+            const exportBtn = document.getElementById('exportExcelBtn');
+            if (exportBtn) exportBtn.addEventListener('click', exportToExcel);
+            
+            const printBtn = document.getElementById('printReportBtn');
+            if (printBtn) printBtn.addEventListener('click', printReport);
+            
+            const fullBtn = document.getElementById('exportFullReportBtn');
+            if (fullBtn) fullBtn.addEventListener('click', showFullReport);
+        });
+    </script>
 </body>
 </html>

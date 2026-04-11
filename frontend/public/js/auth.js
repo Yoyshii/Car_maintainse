@@ -5,6 +5,8 @@ const USER_KEY = 'car_user';
 function saveAuthData(token, user) {
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
+    // Принудительно обновляем UI сразу после сохранения
+    setTimeout(() => forceUpdateAllPages(), 10);
 }
 
 function getToken() {
@@ -20,17 +22,19 @@ function isAuthenticated() {
     return getToken() !== null;
 }
 
-function logout() {
+async function logout() {
     const token = getToken();
     if (token) {
-        fetch(`${API_URL}/auth/logout`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        }).catch(console.error);
+        try {
+            await fetch(`${API_URL}/auth/logout`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+        } catch(e) { console.error(e); }
     }
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
-    window.location.href = '/login.html';
+    window.location.href = '/';
 }
 
 async function register(data) {
@@ -57,51 +61,64 @@ async function login(email, password) {
     return result;
 }
 
-async function getProfile() {
-    const token = getToken();
-    if (!token) return null;
-    const response = await fetch(`${API_URL}/auth/me`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+// ГЛАВНАЯ ФУНКЦИЯ - принудительно обновляет ВСЕ страницы
+function forceUpdateAllPages() {
+    const isAuth = isAuthenticated();
+    const user = getUser();
+    
+    console.log('forceUpdateAllPages called, isAuth:', isAuth);
+    
+    // Обновляем все элементы с классом user-name и id userName
+    document.querySelectorAll('#userName, .user-name').forEach(el => {
+        if (el) {
+            el.textContent = user?.full_name || user?.username || '';
+            el.style.display = isAuth ? 'inline-block' : 'none';
+        }
     });
-    if (!response.ok) {
-        if (response.status === 401) logout();
-        return null;
+    
+    // Скрываем/показываем кнопки входа и регистрации
+    const authButtons = document.getElementById('authButtons');
+    const userMenu = document.getElementById('userMenu');
+    
+    if (authButtons) {
+        authButtons.style.display = isAuth ? 'none' : 'flex';
+        console.log('authButtons display:', authButtons.style.display);
     }
-    return await response.json();
+    
+    if (userMenu) {
+        userMenu.style.display = isAuth ? 'flex' : 'none';
+        console.log('userMenu display:', userMenu.style.display);
+    }
+    
+    // Дополнительно: скрываем все ссылки на регистрацию и вход
+    document.querySelectorAll('a[href="/login.html"], a[href="/register.html"]').forEach(link => {
+        if (link.closest('#userMenu') === null) {
+            link.style.display = isAuth ? 'none' : 'inline-block';
+        }
+    });
 }
 
+// Функция обновления UI
+function updateUI() {
+    forceUpdateAllPages();
+}
+
+// Проверка авторизации для защищенных страниц
 function checkAuth() {
-    const publicPages = ['/login.html', '/register.html', '/'];
+    const publicPages = ['/', '/login.html', '/register.html', '/visualization.html'];
     const path = window.location.pathname;
-    if (!isAuthenticated() && !publicPages.includes(path) && path !== '/') {
+    
+    if (!publicPages.includes(path) && path !== '/' && !isAuthenticated()) {
+        localStorage.setItem('redirectAfterLogin', path);
         window.location.href = '/login.html';
         return false;
     }
     
-    if (isAuthenticated()) {
-        const user = getUser();
-        const userNameElements = document.querySelectorAll('#userName, #welcomeName');
-        userNameElements.forEach(el => {
-            if (el) el.textContent = user?.full_name || user?.username || '';
-        });
-        
-        const userMenu = document.getElementById('userMenu');
-        const authButtons = document.getElementById('authButtons');
-        if (userMenu) userMenu.style.display = 'flex';
-        if (authButtons) authButtons.style.display = 'none';
-        
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                logout();
-            });
-        }
-    }
+    forceUpdateAllPages();
     return true;
 }
 
-// Регистрация
+// Обработчик регистрации
 if (document.getElementById('registerForm')) {
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -119,32 +136,62 @@ if (document.getElementById('registerForm')) {
                 full_name: document.getElementById('full_name').value,
                 phone: document.getElementById('phone').value
             });
-            window.location.href = '/dashboard.html';
+            window.location.href = '/';
         } catch (err) {
             alert(err.message);
         }
     });
 }
 
-// Вход
+// Обработчик входа
 if (document.getElementById('loginForm')) {
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
         try {
-            await login(
-                document.getElementById('email').value,
-                document.getElementById('password').value
-            );
-            window.location.href = '/dashboard.html';
+            await login(email, password);
+            window.location.href = '/';
         } catch (err) {
             alert(err.message);
         }
     });
 }
 
-// Инициализация
+// Обработчик кнопки выхода
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'logoutBtn' || e.target.closest('#logoutBtn')) {
+        e.preventDefault();
+        logout();
+    }
+});
+
+// Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
+    forceUpdateAllPages();
     checkAuth();
 });
 
-window.auth = { getToken, getUser, isAuthenticated, logout, getProfile };
+// Слушаем изменения в localStorage
+window.addEventListener('storage', function(e) {
+    if (e.key === TOKEN_KEY || e.key === USER_KEY) {
+        console.log('Storage changed, updating UI');
+        forceUpdateAllPages();
+    }
+});
+
+// Также обновляем при каждом переходе на страницу
+window.addEventListener('pageshow', function() {
+    forceUpdateAllPages();
+});
+
+window.auth = { 
+    getToken, 
+    getUser, 
+    isAuthenticated, 
+    logout, 
+    getProfile: () => getUser(), 
+    updateUI,
+    forceUpdateAllPages 
+};

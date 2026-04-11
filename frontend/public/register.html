@@ -43,9 +43,17 @@
             </form>
             <div class="auth-footer">
                 <p>Уже есть аккаунт? <a href="/login.html">Войти</a></p>
+                <p><a href="/">← Вернуться на главную</a></p>
             </div>
         </div>
     </div>
     <script src="/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.auth && window.auth.isAuthenticated()) {
+                window.location.href = '/';
+            }
+        });
+    </script>
 </body>
 </html>

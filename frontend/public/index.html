@@ -13,16 +13,23 @@
                 <span class="logo">🚗</span>
                 <span>Car Maintenance Visualizer</span>
             </div>
-            <div class="nav-menu" id="navMenu">
-                <a href="/dashboard.html" class="nav-link">Главная</a>
+            <div class="nav-menu">
+                <a href="/" class="nav-link active">Главная</a>
                 <a href="/visualization.html" class="nav-link">3D Визуализация</a>
-                <div class="user-menu" id="userMenu" style="display: none;">
-                    <span class="user-name" id="userName"></span>
-                    <button class="logout-btn" id="logoutBtn">Выйти</button>
-                </div>
-                <div class="auth-buttons" id="authButtons">
+                
+                <!-- Блок для НЕавторизованных пользователей -->
+                <div id="authButtons" style="display: flex; gap: 12px;">
                     <a href="/login.html" class="btn btn-outline">Вход</a>
                     <a href="/register.html" class="btn btn-primary">Регистрация</a>
+                </div>
+                
+                <!-- Блок для авторизованных пользователей -->
+                <div id="userMenu" style="display: none; align-items: center; gap: 16px;">
+                    <span class="user-name" id="userName"></span>
+                    <a href="/dashboard.html" class="nav-link">Кабинет</a>
+                    <a href="/visualization.html" class="nav-link">3D Визуализация</a>
+                    <a href="/add-car.html" class="btn btn-success" style="background: linear-gradient(135deg, #10b981, #059669); padding: 6px 12px; text-decoration: none; border-radius: 8px; color: white;">➕ Добавить авто</a>
+                    <button class="logout-btn" id="logoutBtn">Выйти</button>
                 </div>
             </div>
         </nav>
@@ -32,33 +39,60 @@
                 <h1>Управляйте техническим обслуживанием автомобиля</h1>
                 <p>Визуализируйте автомобиль в 3D, отслеживайте пробег и планируйте ТО</p>
                 <div class="hero-buttons">
-                    <a href="/visualization.html" class="btn btn-primary btn-large">Начать визуализацию</a>
-                    <a href="/register.html" class="btn btn-outline btn-large">Создать аккаунт</a>
+                    <a href="/visualization.html" class="btn btn-primary btn-large">🔍 Начать визуализацию</a>
+                    <a href="/register.html" class="btn btn-outline btn-large">📝 Создать аккаунт</a>
+                    <button onclick="showDemoModal()" class="btn btn-warning btn-large">🎬 Смотреть демо</button>
                 </div>
             </div>
 
             <div class="features-section">
                 <h2>Ключевые возможности</h2>
                 <div class="features-grid">
-                    <div class="feature-card">
+                    <div class="feature-card" onclick="window.location.href='/visualization.html'">
                         <div class="feature-icon">🎨</div>
                         <h3>3D Визуализация</h3>
-                        <p>Интерактивная 3D модель автомобиля с выбором деталей</p>
+                        <p>Интерактивная модель автомобиля с выбором деталей. Нажмите на любую часть — получите информацию о ТО.</p>
+                        <span style="color: #60a5fa; margin-top: 15px; display: inline-block;">→ Попробовать</span>
                     </div>
-                    <div class="feature-card">
+                    <div class="feature-card" onclick="checkAuthAndRedirect('/history.html')">
                         <div class="feature-icon">📊</div>
                         <h3>Трекер пробега</h3>
-                        <p>Отслеживайте историю пробега и смотрите графики</p>
+                        <p>Отслеживайте историю пробега, смотрите графики и получайте уведомления о предстоящем ТО.</p>
+                        <span style="color: #60a5fa; margin-top: 15px; display: inline-block;">→ Посмотреть историю</span>
                     </div>
-                    <div class="feature-card">
+                    <div class="feature-card" onclick="checkAuthAndRedirect('/reports.html')">
                         <div class="feature-icon">🔧</div>
                         <h3>Планирование ТО</h3>
-                        <p>Автоматические напоминания о предстоящем обслуживании</p>
+                        <p>Автоматические напоминания о предстоящем обслуживании. Экспорт отчетов в Excel.</p>
+                        <span style="color: #60a5fa; margin-top: 15px; display: inline-block;">→ Смотреть отчеты</span>
                     </div>
-                    <div class="feature-card">
+                    <div class="feature-card" onclick="showCarsDemo()">
                         <div class="feature-icon">📈</div>
-                        <h3>Отчеты</h3>
-                        <p>Детальная статистика расходов на обслуживание</p>
+                        <h3>Управление автопарком</h3>
+                        <p>Добавляйте несколько автомобилей, переключайтесь между ними. Каждый автомобиль имеет свою историю ТО.</p>
+                        <span style="color: #60a5fa; margin-top: 15px; display: inline-block;">→ Узнать больше</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 40px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 24px; padding: 30px; text-align: center; border: 1px solid rgba(96, 165, 250, 0.2);">
+                <h3 style="margin-bottom: 20px;">📊 Быстрая статистика</h3>
+                <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
+                    <div>
+                        <div style="font-size: 36px; font-weight: 700; color: #60a5fa;">4+</div>
+                        <div style="color: #94a3b8;">Автомобилей в системе</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 36px; font-weight: 700; color: #60a5fa;">12+</div>
+                        <div style="color: #94a3b8;">Деталей для диагностики</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 36px; font-weight: 700; color: #60a5fa;">50+</div>
+                        <div style="color: #94a3b8;">Рекомендаций по ТО</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 36px; font-weight: 700; color: #60a5fa;">100%</div>
+                        <div style="color: #94a3b8;">Бесплатно</div>
                     </div>
                 </div>
             </div>
@@ -69,6 +103,65 @@
         </footer>
     </div>
 
+    <!-- Модальное окно для демо -->
+    <div id="demoModal" class="modal">
+        <div class="modal-content">
+            <h3>🎬 Демонстрация возможностей</h3>
+            <div style="margin: 20px 0;">
+                <div style="background: rgba(96, 165, 250, 0.1); padding: 15px; border-radius: 16px; margin-bottom: 15px;">
+                    <strong>🎨 3D Визуализация</strong>
+                    <p style="margin-top: 8px; font-size: 13px;">Кликните на автомобиль — выберите деталь, получите информацию о ТО и рекомендации.</p>
+                    <button onclick="window.location.href='/visualization.html'" class="btn btn-primary" style="margin-top: 10px;">Перейти</button>
+                </div>
+                <div style="background: rgba(96, 165, 250, 0.1); padding: 15px; border-radius: 16px; margin-bottom: 15px;">
+                    <strong>📊 Отчеты и статистика</strong>
+                    <p style="margin-top: 8px; font-size: 13px;">Смотрите полную статистику расходов, экспортируйте данные в Excel.</p>
+                    <button onclick="checkAuthAndRedirect('/reports.html')" class="btn btn-primary" style="margin-top: 10px;">Перейти</button>
+                </div>
+                <div style="background: rgba(96, 165, 250, 0.1); padding: 15px; border-radius: 16px;">
+                    <strong>🚗 Управление автомобилями</strong>
+                    <p style="margin-top: 8px; font-size: 13px;">Добавляйте несколько авто, переключайтесь между ними, отслеживайте историю каждого.</p>
+                    <button onclick="window.location.href='/visualization.html'" class="btn btn-primary" style="margin-top: 10px;">Перейти</button>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button onclick="closeDemoModal()" class="btn-outline">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/auth.js"></script>
+    <script>
+        function showDemoModal() {
+            document.getElementById('demoModal').classList.add('active');
+        }
+        function closeDemoModal() {
+            document.getElementById('demoModal').classList.remove('active');
+        }
+        function showCarsDemo() {
+            alert('🚗 Управление автопарком\n\nВы можете:\n• Добавлять несколько автомобилей\n• Переключаться между ними\n• Каждый автомобиль имеет свою историю ТО\n• Разные цвета для разных авто\n\nПерейдите в раздел "3D Визуализация" и нажмите кнопку "+" для добавления нового авто!');
+        }
+        function checkAuthAndRedirect(url) {
+            if (window.auth && window.auth.isAuthenticated()) {
+                window.location.href = url;
+            } else {
+                if (confirm('Для доступа к этой функции необходимо войти в аккаунт. Перейти на страницу входа?')) {
+                    localStorage.setItem('redirectAfterLogin', url);
+                    window.location.href = '/login.html';
+                }
+            }
+        }
+        
+        document.getElementById('demoModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDemoModal();
+        });
+        
+        // Принудительное обновление UI после загрузки
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.auth && window.auth.updateUI) {
+                setTimeout(window.auth.updateUI, 100);
+            }
+        });
+    </script>
 </body>
 </html>

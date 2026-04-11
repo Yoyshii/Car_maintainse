@@ -2,7 +2,7 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-// БАЗА ДАННЫХ В ТЕКУЩЕЙ ПАПКЕ (где есть права на запись)
+// БАЗА ДАННЫХ В ТЕКУЩЕЙ ПАПКЕ (где запускается сервер)
 const dbPath = path.join(process.cwd(), 'car_maintenance.db');
 const schemaPath = path.join(__dirname, '../schema.sql');
 
@@ -80,7 +80,7 @@ class Database {
     }
 
     async getUserById(id) {
-        return this.get('SELECT id, username, email, full_name, phone, role, created_at, last_login FROM users WHERE id = ?', [id]);
+        return this.get('SELECT id, username, email, full_name, phone, role FROM users WHERE id = ?', [id]);
     }
 
     async createUser(userData) {
@@ -101,11 +101,16 @@ class Database {
         return this.all('SELECT * FROM cars WHERE user_id = ? ORDER BY created_at DESC', [userId]);
     }
 
+    async getCarById(id, userId) {
+        return this.get('SELECT * FROM cars WHERE id = ? AND user_id = ?', [id, userId]);
+    }
+
     async createCar(userId, data) {
         const { brand, model, year, license_plate, color, mileage, engine_type } = data;
         const result = await this.run(
-            'INSERT INTO cars (user_id, brand, model, year, license_plate, color, mileage, engine_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [userId, brand, model, year, license_plate, color, mileage || 0, engine_type]
+            `INSERT INTO cars (user_id, brand, model, year, license_plate, color, mileage, engine_type) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [userId, brand, model, year || new Date().getFullYear(), license_plate || '', color || '#dc2626', mileage || 0, engine_type || '']
         );
         return result.id;
     }
@@ -115,34 +120,17 @@ class Database {
         await this.run('INSERT INTO mileage_history (car_id, mileage, record_date) VALUES (?, ?, ?)', [carId, mileage, date]);
     }
 
-    // ========== MAINTENANCE METHODS ==========
     async getMaintenanceRecords(carId, userId) {
         return this.all(
-            `SELECT mr.*, cp.name as part_name, cp.icon, cp.color 
-             FROM maintenance_records mr
-             LEFT JOIN car_parts cp ON mr.part_key = cp.part_key
-             WHERE mr.car_id = ? AND EXISTS (SELECT 1 FROM cars WHERE id = mr.car_id AND user_id = ?)
-             ORDER BY mr.date DESC`,
-            [carId, userId]
+            `SELECT * FROM maintenance_records WHERE car_id = ? 
+             AND EXISTS (SELECT 1 FROM cars WHERE id = ? AND user_id = ?)
+             ORDER BY date DESC`,
+            [carId, carId, userId]
         );
     }
 
-    async addMaintenanceRecord(carId, userId, data) {
-        const car = await this.get('SELECT * FROM cars WHERE id = ? AND user_id = ?', [carId, userId]);
-        if (!car) throw new Error('Car not found');
-        
-        const { part_key, service_type, service_name, date, mileage, cost, description } = data;
-        const result = await this.run(
-            `INSERT INTO maintenance_records (car_id, part_key, service_type, service_name, date, mileage, cost, description)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [carId, part_key, service_type, service_name, date, mileage, cost, description]
-        );
-        return result.id;
-    }
-
-    // ========== PARTS METHODS ==========
     async getAllParts() {
-        return this.all('SELECT * FROM car_parts ORDER BY category, name');
+        return this.all('SELECT * FROM car_parts');
     }
 
     // ========== SESSION METHODS ==========

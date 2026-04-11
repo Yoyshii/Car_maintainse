@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить автомобиль - Car Maintenance</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 28px;
+            padding: 32px;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(10, 15, 26, 0.8);
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            border-radius: 12px;
+            color: #f1f5f9;
+            font-size: 14px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .color-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            margin-top: 8px;
+            border: 2px solid #fff;
+        }
+        .form-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .form-buttons button {
+            flex: 1;
+        }
+        h2 {
+            margin-bottom: 24px;
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="logo">🚗</span>
+                <span>Car Maintenance Visualizer</span>
+            </div>
+            <div class="nav-menu">
+                <a href="/" class="nav-link">Главная</a>
+                <a href="/visualization.html" class="nav-link">3D Визуализация</a>
+                <div id="authButtons" style="display: flex; gap: 12px;">
+                    <a href="/login.html" class="btn btn-outline">Вход</a>
+                    <a href="/register.html" class="btn btn-primary">Регистрация</a>
+                </div>
+                <div id="userMenu" style="display: none; align-items: center; gap: 16px;">
+                    <span class="user-name" id="userName"></span>
+                    <a href="/dashboard.html" class="nav-link">Кабинет</a>
+                    <a href="/visualization.html" class="nav-link">3D Визуализация</a>
+                    <button class="logout-btn" id="logoutBtn">Выйти</button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="form-container">
+                <h2>➕ Добавление нового автомобиля</h2>
+                <form id="addCarForm">
+                    <div class="form-group">
+                        <label>Марка *</label>
+                        <input type="text" id="brand" required placeholder="Например: Toyota">
+                    </div>
+                    <div class="form-group">
+                        <label>Модель *</label>
+                        <input type="text" id="model" required placeholder="Например: Camry">
+                    </div>
+                    <div class="form-group">
+                        <label>Год выпуска</label>
+                        <input type="number" id="year" value="2024" min="1900" max="2025">
+                    </div>
+                    <div class="form-group">
+                        <label>Госномер</label>
+                        <input type="text" id="license_plate" placeholder="А123ВС">
+                    </div>
+                    <div class="form-group">
+                        <label>Цвет</label>
+                        <input type="color" id="color" value="#dc2626">
+                        <div class="color-preview" id="colorPreview" style="background: #dc2626;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Начальный пробег (км)</label>
+                        <input type="number" id="mileage" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Тип двигателя</label>
+                        <select id="engine_type">
+                            <option value="">Не указан</option>
+                            <option value="Бензин">Бензин</option>
+                            <option value="Дизель">Дизель</option>
+                            <option value="Гибрид">Гибрид</option>
+                            <option value="Электро">Электро</option>
+                        </select>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary">💾 Сохранить</button>
+                        <button type="button" onclick="window.location.href='/visualization.html'" class="btn btn-outline">← Назад</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 Car Maintenance Visualizer. Все права защищены.</p>
+        </footer>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        
+        // Превью цвета
+        document.getElementById('color').addEventListener('input', function(e) {
+            document.getElementById('colorPreview').style.background = e.target.value;
+        });
+        
+        // Обновление UI
+        function updateUI() {
+            const isAuth = window.auth && window.auth.isAuthenticated();
+            const authButtons = document.getElementById('authButtons');
+            const userMenu = document.getElementById('userMenu');
+            const userNameSpan = document.getElementById('userName');
+            
+            if (isAuth) {
+                if (authButtons) authButtons.style.display = 'none';
+                if (userMenu) userMenu.style.display = 'flex';
+                const user = window.auth.getUser();
+                if (userNameSpan) userNameSpan.textContent = user?.username || user?.full_name || '';
+            } else {
+                if (authButtons) authButtons.style.display = 'flex';
+                if (userMenu) userMenu.style.display = 'none';
+                window.location.href = '/login.html';
+            }
+        }
+        
+        // Обработка формы
+        document.getElementById('addCarForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const token = window.auth.getToken();
+            if (!token) {
+                alert('Необходимо войти в аккаунт');
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            const carData = {
+                brand: document.getElementById('brand').value,
+                model: document.getElementById('model').value,
+                year: parseInt(document.getElementById('year').value),
+                license_plate: document.getElementById('license_plate').value,
+                color: document.getElementById('color').value,
+                mileage: parseInt(document.getElementById('mileage').value),
+                engine_type: document.getElementById('engine_type').value
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/cars`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(carData)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Ошибка при сохранении');
+                }
+                
+                const newCar = await response.json();
+                alert(`✅ Автомобиль ${carData.brand} ${carData.model} успешно добавлен!`);
+                window.location.href = '/visualization.html';
+                
+            } catch (error) {
+                console.error(error);
+                alert('❌ Ошибка при добавлении автомобиля: ' + error.message);
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', updateUI);
+    </script>
+</body>
+</html>

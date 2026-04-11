@@ -27,9 +27,19 @@
             </form>
             <div class="auth-footer">
                 <p>Нет аккаунта? <a href="/register.html">Зарегистрироваться</a></p>
+                <p><a href="/">← Вернуться на главную</a></p>
             </div>
         </div>
     </div>
     <script src="/js/auth.js"></script>
+    <script>
+        // Дополнительная проверка после загрузки страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Если пользователь уже авторизован, перенаправляем на главную
+            if (window.auth && window.auth.isAuthenticated()) {
+                window.location.href = '/';
+            }
+        });
+    </script>
 </body>
-</html>
+</html>ы
