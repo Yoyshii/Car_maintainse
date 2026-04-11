@@ -40,7 +40,7 @@ async function register(data) {
         body: JSON.stringify(data)
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Registration failed');
+    if (!response.ok) throw new Error(result.error || 'Ошибка регистрации');
     saveAuthData(result.token, result.user);
     return result;
 }
@@ -52,7 +52,7 @@ async function login(email, password) {
         body: JSON.stringify({ email, password })
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Login failed');
+    if (!response.ok) throw new Error(result.error || 'Ошибка входа');
     saveAuthData(result.token, result.user);
     return result;
 }
@@ -101,14 +101,14 @@ function checkAuth() {
     return true;
 }
 
-// Register form handler
+// Регистрация
 if (document.getElementById('registerForm')) {
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const password = document.getElementById('password').value;
         const confirm = document.getElementById('confirm_password').value;
         if (password !== confirm) {
-            alert('Passwords do not match');
+            alert('Пароли не совпадают');
             return;
         }
         try {
@@ -126,7 +126,7 @@ if (document.getElementById('registerForm')) {
     });
 }
 
-// Login form handler
+// Вход
 if (document.getElementById('loginForm')) {
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -142,7 +142,7 @@ if (document.getElementById('loginForm')) {
     });
 }
 
-// Initialize
+// Инициализация
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
 });

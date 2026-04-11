@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service History - Car Maintenance</title>
+    <title>История ТО - Car Maintenance</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -14,29 +14,29 @@
                 <span>Car Maintenance Visualizer</span>
             </div>
             <div class="nav-menu">
-                <a href="/dashboard.html" class="nav-link">Dashboard</a>
-                <a href="/visualization.html" class="nav-link">3D Visualization</a>
-                <a href="/history.html" class="nav-link active">Service History</a>
-                <a href="/reports.html" class="nav-link">Reports</a>
+                <a href="/dashboard.html" class="nav-link">Главная</a>
+                <a href="/visualization.html" class="nav-link">3D Визуализация</a>
+                <a href="/history.html" class="nav-link active">История ТО</a>
+                <a href="/reports.html" class="nav-link">Отчеты</a>
                 <div class="user-menu">
                     <span class="user-name" id="userName"></span>
-                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                    <button class="logout-btn" id="logoutBtn">Выйти</button>
                 </div>
             </div>
         </nav>
 
         <main class="main-content">
-            <h2>Service History</h2>
+            <h2>История технического обслуживания</h2>
             <table class="history-table">
                 <thead>
-                    <tr><th>Date</th><th>Service</th><th>Part</th><th>Mileage</th><th>Cost</th></tr>
+                    <tr><th>Дата</th><th>Услуга</th><th>Деталь</th><th>Пробег</th><th>Стоимость</th></tr>
                 </thead>
                 <tbody id="historyBody"></tbody>
             </table>
         </main>
 
         <footer class="footer">
-            <p>&copy; 2024 Car Maintenance Visualizer. All rights reserved.</p>
+            <p>&copy; 2024 Car Maintenance Visualizer. Все права защищены.</p>
         </footer>
     </div>
 

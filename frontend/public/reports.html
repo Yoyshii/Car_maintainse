@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports - Car Maintenance</title>
+    <title>Отчеты - Car Maintenance</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -14,29 +14,29 @@
                 <span>Car Maintenance Visualizer</span>
             </div>
             <div class="nav-menu">
-                <a href="/dashboard.html" class="nav-link">Dashboard</a>
-                <a href="/visualization.html" class="nav-link">3D Visualization</a>
-                <a href="/history.html" class="nav-link">Service History</a>
-                <a href="/reports.html" class="nav-link active">Reports</a>
+                <a href="/dashboard.html" class="nav-link">Главная</a>
+                <a href="/visualization.html" class="nav-link">3D Визуализация</a>
+                <a href="/history.html" class="nav-link">История ТО</a>
+                <a href="/reports.html" class="nav-link active">Отчеты</a>
                 <div class="user-menu">
                     <span class="user-name" id="userName"></span>
-                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                    <button class="logout-btn" id="logoutBtn">Выйти</button>
                 </div>
             </div>
         </nav>
 
         <main class="main-content">
             <div class="stats-grid">
-                <div class="stat-card"><div class="value" id="reportTotalCost">$6,200</div><div class="label">Total Spent</div></div>
-                <div class="stat-card"><div class="value" id="reportAvgCost">$775</div><div class="label">Avg per Month</div></div>
-                <div class="stat-card"><div class="value" id="reportMileage">15,247</div><div class="label">Current KM</div></div>
-                <div class="stat-card"><div class="value" id="reportNextService">2,500</div><div class="label">Next Service KM</div></div>
+                <div class="stat-card"><div class="value" id="reportTotalCost">$6,200</div><div class="label">Всего потрачено</div></div>
+                <div class="stat-card"><div class="value" id="reportAvgCost">$775</div><div class="label">В среднем в месяц</div></div>
+                <div class="stat-card"><div class="value" id="reportMileage">15,247</div><div class="label">Текущий пробег</div></div>
+                <div class="stat-card"><div class="value" id="reportNextService">2,500</div><div class="label">До следующего ТО</div></div>
             </div>
-            <button id="exportBtn" class="export-btn">EXPORT FULL REPORT</button>
+            <button id="exportBtn" class="export-btn">ЭКСПОРТ ОТЧЕТА</button>
         </main>
 
         <footer class="footer">
-            <p>&copy; 2024 Car Maintenance Visualizer. All rights reserved.</p>
+            <p>&copy; 2024 Car Maintenance Visualizer. Все права защищены.</p>
         </footer>
     </div>
 

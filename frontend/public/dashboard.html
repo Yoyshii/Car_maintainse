@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Car Maintenance</title>
+    <title>Главная - Car Maintenance</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -14,21 +14,21 @@
                 <span>Car Maintenance Visualizer</span>
             </div>
             <div class="nav-menu">
-                <a href="/dashboard.html" class="nav-link active">Dashboard</a>
-                <a href="/visualization.html" class="nav-link">3D Visualization</a>
-                <a href="/history.html" class="nav-link">Service History</a>
-                <a href="/reports.html" class="nav-link">Reports</a>
+                <a href="/dashboard.html" class="nav-link active">Главная</a>
+                <a href="/visualization.html" class="nav-link">3D Визуализация</a>
+                <a href="/history.html" class="nav-link">История ТО</a>
+                <a href="/reports.html" class="nav-link">Отчеты</a>
                 <div class="user-menu">
                     <span class="user-name" id="userName"></span>
-                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                    <button class="logout-btn" id="logoutBtn">Выйти</button>
                 </div>
             </div>
         </nav>
 
         <main class="main-content">
             <div class="dashboard-header">
-                <h1>Dashboard</h1>
-                <p>Welcome, <span id="welcomeName"></span>!</p>
+                <h1>Панель управления</h1>
+                <p>Добро пожаловать, <span id="welcomeName"></span>!</p>
             </div>
 
             <div class="stats-grid" id="statsGrid">
@@ -36,40 +36,40 @@
                     <div class="stat-icon">🚗</div>
                     <div class="stat-info">
                         <div class="stat-value" id="carsCount">1</div>
-                        <div class="stat-label">Vehicles</div>
+                        <div class="stat-label">Автомобилей</div>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">📊</div>
                     <div class="stat-info">
                         <div class="stat-value" id="totalMileage">15,247</div>
-                        <div class="stat-label">Total KM</div>
+                        <div class="stat-label">Общий пробег (км)</div>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">💰</div>
                     <div class="stat-info">
                         <div class="stat-value" id="totalCost">$6,200</div>
-                        <div class="stat-label">Total Cost</div>
+                        <div class="stat-label">Расходы на ТО</div>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">⏰</div>
                     <div class="stat-info">
                         <div class="stat-value" id="upcomingServices">3</div>
-                        <div class="stat-label">Upcoming Services</div>
+                        <div class="stat-label">Предстоящих ТО</div>
                     </div>
                 </div>
             </div>
 
             <div class="recent-card">
-                <h3>Recent Maintenance</h3>
+                <h3>Последние обслуживания</h3>
                 <div id="recentList"></div>
             </div>
         </main>
 
         <footer class="footer">
-            <p>&copy; 2024 Car Maintenance Visualizer. All rights reserved.</p>
+            <p>&copy; 2024 Car Maintenance Visualizer. Все права защищены.</p>
         </footer>
     </div>
 
