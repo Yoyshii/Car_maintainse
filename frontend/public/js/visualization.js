@@ -3,7 +3,12 @@ let currentCarId = null;
 let cars = [];
 
 const canvas = document.getElementById('carCanvas');
-const ctx = canvas.getContext('2d');
+if (!canvas) {
+    console.error('❌ Canvas не найден! Проверьте HTML');
+} else {
+    console.log('✅ Canvas найден');
+}
+const ctx = canvas ? canvas.getContext('2d') : null;
 
 // Зоны для кликов
 const zones = [
@@ -42,7 +47,7 @@ const zones = [
 
 // Загрузка автомобилей пользователя
 async function loadUserCars() {
-    const token = window.auth.getToken();
+    const token = window.auth ? window.auth.getToken() : localStorage.getItem('car_token');
     if (!token) return [];
     
     try {
@@ -59,32 +64,59 @@ async function loadUserCars() {
     return [];
 }
 
-// Обновление селектора автомобилей
+// Обновление селектора и перезагрузка списка автомобилей
 async function updateCarSelect() {
     const carSelect = document.getElementById('carSelect');
     if (!carSelect) return;
     
-    const userCars = await loadUserCars();
+    const token = window.auth ? window.auth.getToken() : localStorage.getItem('car_token');
+    if (!token) return;
     
-    if (userCars.length === 0) {
-        carSelect.innerHTML = '<option value="">Нет автомобилей</option>';
-        // Показываем сообщение и кнопку добавления
-        const addCarBtn = document.getElementById('addCarBtn');
-        if (addCarBtn) addCarBtn.style.display = 'block';
-        return;
+    try {
+        const response = await fetch(`${API_URL}/cars`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            cars = await response.json();
+            console.log('Загружено автомобилей:', cars.length);
+            
+            if (cars.length === 0) {
+                carSelect.innerHTML = '<option value="">Нет автомобилей</option>';
+                drawEmptyCar();
+                return;
+            }
+            
+            carSelect.innerHTML = cars.map(car => 
+                `<option value="${car.id}" ${currentCarId === car.id ? 'selected' : ''}>${car.brand} ${car.model} (${car.year}) - ${car.mileage.toLocaleString()} км</option>`
+            ).join('');
+            
+            if (!currentCarId && cars.length > 0) {
+                currentCarId = cars[0].id;
+                carSelect.value = currentCarId;
+            }
+            
+            drawCar();
+        } else {
+            console.error('Ошибка загрузки автомобилей');
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
     }
-    
-    carSelect.innerHTML = userCars.map(car => 
-        `<option value="${car.id}" data-color="${car.color}">${car.brand} ${car.model} (${car.year}) - ${car.mileage.toLocaleString()} км</option>`
-    ).join('');
-    
-    // Выбираем первый автомобиль, если ещё не выбран
-    if (!currentCarId || !userCars.find(c => c.id === currentCarId)) {
-        currentCarId = userCars[0].id;
-        carSelect.value = currentCarId;
-    }
-    
-    drawCar();
+}
+
+// Функция для отображения пустого холста
+function drawEmptyCar() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '18px "Segoe UI"';
+    ctx.textAlign = 'center';
+    ctx.fillText('Нет добавленных автомобилей', canvas.width/2, canvas.height/2);
+    ctx.font = '14px "Segoe UI"';
+    ctx.fillText('Нажмите "+" чтобы добавить', canvas.width/2, canvas.height/2 + 40);
 }
 
 // Получить текущий автомобиль
@@ -94,18 +126,10 @@ function getCurrentCar() {
 
 // Отрисовка автомобиля
 function drawCar() {
+    if (!ctx) return;
     const currentCar = getCurrentCar();
     if (!currentCar) {
-        // Если нет автомобиля, рисуем пустой холст с сообщением
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '18px "Segoe UI"';
-        ctx.textAlign = 'center';
-        ctx.fillText('Нет добавленных автомобилей', canvas.width/2, canvas.height/2);
-        ctx.font = '14px "Segoe UI"';
-        ctx.fillText('Нажмите "+" чтобы добавить', canvas.width/2, canvas.height/2 + 40);
+        drawEmptyCar();
         return;
     }
     
@@ -248,11 +272,10 @@ function drawCar() {
 
 // Переключение автомобиля
 async function switchCar(carId) {
-    currentCarId = carId;
+    currentCarId = parseInt(carId);
     const car = getCurrentCar();
     if (car) {
         drawCar();
-        // Обновляем отображение пробега
         const mileageSpan = document.getElementById('currentMileage');
         if (mileageSpan) mileageSpan.textContent = car.mileage.toLocaleString();
     }
@@ -260,7 +283,7 @@ async function switchCar(carId) {
 
 // Обновление пробега
 async function updateMileage(mileage) {
-    const token = window.auth.getToken();
+    const token = window.auth ? window.auth.getToken() : localStorage.getItem('car_token');
     if (!token || !currentCarId) return false;
     
     try {
@@ -342,68 +365,97 @@ function resetPanel() {
         <button onclick="window.location.href='/add-car.html'" style="margin-top: 12px; background: linear-gradient(135deg, #10b981, #059669);">➕ ДОБАВИТЬ НОВЫЙ АВТОМОБИЛЬ</button>
     `;
     
-    document.getElementById('updateMileageBtn').addEventListener('click', async () => {
-        const input = document.getElementById('mileageInput');
-        if (input && input.value) {
-            const success = await updateMileage(parseInt(input.value));
-            if (success) {
-                alert('✅ Пробег обновлен!');
-                input.value = '';
-                resetPanel();
-            } else {
-                alert('❌ Ошибка при обновлении пробега');
+    const updateBtn = document.getElementById('updateMileageBtn');
+    if (updateBtn) {
+        updateBtn.onclick = async () => {
+            const input = document.getElementById('mileageInput');
+            if (input && input.value) {
+                const success = await updateMileage(parseInt(input.value));
+                if (success) {
+                    alert('✅ Пробег обновлен!');
+                    input.value = '';
+                    resetPanel();
+                } else {
+                    alert('❌ Ошибка при обновлении пробега');
+                }
             }
+        };
+    }
+}
+
+// События canvas
+if (canvas) {
+    canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        
+        for (const zone of zones) {
+            if (x >= zone.x && x <= zone.x + zone.w && y >= zone.y && y <= zone.y + zone.h) {
+                highlightZone(zone);
+                showPartInfo(zone);
+                break;
+            }
+        }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        
+        let hovered = false;
+        for (const zone of zones) {
+            if (x >= zone.x && x <= zone.x + zone.w && y >= zone.y && y <= zone.y + zone.h) {
+                canvas.style.cursor = 'pointer';
+                highlightZone(zone);
+                hovered = true;
+                break;
+            }
+        }
+        if (!hovered) {
+            canvas.style.cursor = 'default';
+            drawCar();
         }
     });
 }
 
-// События canvas
-canvas.addEventListener('click', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
-    
-    for (const zone of zones) {
-        if (x >= zone.x && x <= zone.x + zone.w && y >= zone.y && y <= zone.y + zone.h) {
-            highlightZone(zone);
-            showPartInfo(zone);
-            break;
-        }
-    }
-});
-
-canvas.addEventListener('mousemove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
-    
-    let hovered = false;
-    for (const zone of zones) {
-        if (x >= zone.x && x <= zone.x + zone.w && y >= zone.y && y <= zone.y + zone.h) {
-            canvas.style.cursor = 'pointer';
-            highlightZone(zone);
-            hovered = true;
-            break;
-        }
-    }
-    if (!hovered) {
-        canvas.style.cursor = 'default';
-        drawCar();
-    }
-});
-
-// Инициализация
-async function init() {
-    await updateCarSelect();
-    resetPanel();
-    drawCar();
-}
-
-init();
-
+// Экспорт функций в глобальную область
 window.switchCar = switchCar;
 window.updateCarSelect = updateCarSelect;
+window.drawCar = drawCar;
+
+// ГЛАВНАЯ ФУНКЦИЯ ЗАПУСКА
+async function startVisualization() {
+    console.log('🚀 Запуск визуализации...');
+    
+    // Ждём авторизацию
+    let attempts = 0;
+    while (!window.auth && attempts < 20) {
+        await new Promise(r => setTimeout(r, 100));
+        attempts++;
+    }
+    
+    if (window.auth && window.auth.isAuthenticated()) {
+        console.log('✅ Пользователь авторизован, загружаем авто');
+        await updateCarSelect();
+        resetPanel();
+    } else {
+        console.log('❌ Пользователь не авторизован');
+        drawEmptyCar();
+        // Показываем кнопки входа
+        const authButtons = document.getElementById('authButtons');
+        const userMenu = document.getElementById('userMenu');
+        if (authButtons) authButtons.style.display = 'flex';
+        if (userMenu) userMenu.style.display = 'none';
+    }
+}
+
+// Запускаем всё после полной загрузки страницы
+window.addEventListener('load', function() {
+    setTimeout(startVisualization, 100);
+});

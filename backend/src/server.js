@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const db = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -11,26 +12,26 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../../frontend/public')));
 
-// Подключаем базу данных
-const db = require('./database');
-
 // Импортируем роуты
 const authRoutes = require('./routes/auth');
 const carRoutes = require('./routes/cars');
 const maintenanceRoutes = require('./routes/maintenance');
 const reportsRoutes = require('./routes/reports');
+const historyRoutes = require('./routes/history');  // ДОБАВЛЯЕМ ИСТОРИЮ
 
 // Проверяем, что роуты загрузились правильно
 console.log('✅ authRoutes loaded:', typeof authRoutes);
 console.log('✅ carRoutes loaded:', typeof carRoutes);
 console.log('✅ maintenanceRoutes loaded:', typeof maintenanceRoutes);
 console.log('✅ reportsRoutes loaded:', typeof reportsRoutes);
+console.log('✅ historyRoutes loaded:', typeof historyRoutes);
 
 // Используем роуты
 app.use('/api/auth', authRoutes);
 app.use('/api/cars', carRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/history', historyRoutes);  // ДОБАВЛЯЕМ РОУТ ИСТОРИИ
 
 // Dashboard stats
 app.get('/api/dashboard/stats', async (req, res) => {

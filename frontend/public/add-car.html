@@ -160,7 +160,7 @@
             }
         }
         
-        // Обработка формы
+        // Обработка формы добавления автомобиля
         document.getElementById('addCarForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -198,6 +198,11 @@
                 
                 const newCar = await response.json();
                 alert(`✅ Автомобиль ${carData.brand} ${carData.model} успешно добавлен!`);
+                
+                // Очищаем localStorage для принудительного обновления
+                localStorage.setItem('cars_updated', Date.now().toString());
+                
+                // Перенаправляем на страницу визуализации
                 window.location.href = '/visualization.html';
                 
             } catch (error) {
