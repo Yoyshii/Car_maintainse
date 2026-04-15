@@ -4,56 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Регистрация - Car Maintenance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="auth-page">
         <div class="auth-card">
             <div class="auth-header">
-                <span class="logo">🚗</span>
+                <i class="fas fa-car" style="font-size: 64px; display: block; margin-bottom: 20px;"></i>
                 <h2>Car Maintenance Visualizer</h2>
                 <p>Создайте новый аккаунт</p>
             </div>
             <form id="registerForm" class="auth-form">
                 <div class="form-group">
-                    <label for="username">Имя пользователя *</label>
+                    <label for="username"><i class="fas fa-user"></i> Имя пользователя *</label>
                     <input type="text" id="username" name="username" required placeholder="username" minlength="3">
                 </div>
                 <div class="form-group">
-                    <label for="email">Email *</label>
+                    <label for="email"><i class="fas fa-envelope"></i> Email *</label>
                     <input type="email" id="email" name="email" required placeholder="example@mail.com">
                 </div>
                 <div class="form-group">
-                    <label for="full_name">Полное имя</label>
+                    <label for="full_name"><i class="fas fa-id-card"></i> Полное имя</label>
                     <input type="text" id="full_name" name="full_name" placeholder="Иван Иванов">
                 </div>
                 <div class="form-group">
-                    <label for="phone">Телефон</label>
+                    <label for="phone"><i class="fas fa-phone"></i> Телефон</label>
                     <input type="tel" id="phone" name="phone" placeholder="+7 (999) 123-45-67">
                 </div>
                 <div class="form-group">
-                    <label for="password">Пароль *</label>
+                    <label for="password"><i class="fas fa-lock"></i> Пароль *</label>
                     <input type="password" id="password" name="password" required placeholder="••••••" minlength="6">
                 </div>
                 <div class="form-group">
-                    <label for="confirm_password">Подтверждение пароля *</label>
+                    <label for="confirm_password"><i class="fas fa-check-circle"></i> Подтверждение пароля *</label>
                     <input type="password" id="confirm_password" name="confirm_password" required placeholder="••••••">
                 </div>
-                <button type="submit" class="btn btn-primary btn-full">Зарегистрироваться</button>
+                <button type="submit" class="btn btn-primary btn-full"><i class="fas fa-user-plus"></i> Зарегистрироваться</button>
             </form>
             <div class="auth-footer">
-                <p>Уже есть аккаунт? <a href="/login.html">Войти</a></p>
-                <p><a href="/">← Вернуться на главную</a></p>
+                <p>Уже есть аккаунт? <a href="/login.html"><i class="fas fa-sign-in-alt"></i> Войти</a></p>
+                <p><a href="/"><i class="fas fa-arrow-left"></i> Вернуться на главную</a></p>
             </div>
         </div>
     </div>
     <script src="/js/auth.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.auth && window.auth.isAuthenticated()) {
-                window.location.href = '/';
-            }
-        });
-    </script>
 </body>
 </html>

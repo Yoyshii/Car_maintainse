@@ -4,138 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Главная - Car Maintenance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app">
         <nav class="navbar">
-            <div class="nav-brand">
-                <span class="logo">🚗</span>
+            <a href="/" class="nav-brand" style="text-decoration: none; display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-car"></i>
                 <span>Car Maintenance Visualizer</span>
-            </div>
+            </a>
             <div class="nav-menu">
-                <a href="/dashboard.html" class="nav-link active">Главная</a>
-                <a href="/visualization.html" class="nav-link">3D Визуализация</a>
-                <a href="/history.html" class="nav-link">История ТО</a>
-                <a href="/reports.html" class="nav-link">Отчеты</a>
+                <a href="/" class="nav-link"><i class="fas fa-home"></i> Главная</a>
+                <a href="/visualization.html" class="nav-link"><i class="fas fa-cube"></i> 3D Визуализация</a>
+                <a href="/history.html" class="nav-link"><i class="fas fa-history"></i> История ТО</a>
+                <a href="/reports.html" class="nav-link"><i class="fas fa-chart-bar"></i> Отчеты</a>
                 <div class="user-menu">
                     <span class="user-name" id="userName"></span>
-                    <button class="logout-btn" id="logoutBtn">Выйти</button>
+                    <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Выйти</button>
                 </div>
             </div>
         </nav>
 
         <main class="main-content">
-            <div class="hero-section">
-                <h1>Управляйте техническим обслуживанием автомобиля</h1>
-                <p>Визуализируйте автомобиль, отслеживайте пробег и планируйте ТО</p>
-                <div class="hero-buttons">
-                    <a href="/visualization.html" class="btn btn-primary btn-large">🔍 Начать визуализацию</a>
-                    <a href="/register.html" class="btn btn-outline btn-large">📝 Создать аккаунт</a>
-                    <button onclick="showDemoModal()" class="btn btn-warning btn-large">🎬 Смотреть демо</button>
+            <div class="dashboard-header">
+                <h1><i class="fas fa-tachometer-alt"></i> Панель управления</h1>
+                <p>Добро пожаловать, <span id="welcomeName"></span>! 👋</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-car"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="carsCount">1</div>
+                        <div class="stat-label">Автомобилей</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-road"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalMileage">15,247</div>
+                        <div class="stat-label">Общий пробег (км)</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-ruble-sign"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalCost">₽6,200</div>
+                        <div class="stat-label">Расходы на ТО</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="upcomingServices">3</div>
+                        <div class="stat-label">Предстоящих ТО</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="features-section">
-                <h2>Ключевые возможности</h2>
-                <div class="features-grid">
-                    <div class="feature-card" onclick="window.location.href='/visualization.html'">
-                        <div class="feature-icon">🎨</div>
-                        <h3>3D Визуализация</h3>
-                        <p>Интерактивная 3D модель автомобиля с выбором деталей. Нажмите на любую часть — получите информацию о ТО.</p>
-                        <span style="color: #60a5fa; margin-top: 15px; display: inline-block;">→ Попробовать</span>
-                    </div>
-                    <div class="feature-card" onclick="window.location.href='/history.html'">
-                        <div class="feature-icon">📊</div>
-                        <h3>Трекер пробега</h3>
-                        <p>Отслеживайте историю пробега, смотрите графики и получайте уведомления о предстоящем ТО.</p>
-                        <span style="color: #60a5fa; margin-top: 15px; display: inline-block;">→ Посмотреть историю</span>
-                    </div>
-                    <div class="feature-card" onclick="window.location.href='/reports.html'">
-                        <div class="feature-icon">🔧</div>
-                        <h3>Планирование ТО</h3>
-                        <p>Автоматические напоминания о предстоящем обслуживании. Экспорт отчетов в Excel.</p>
-                        <span style="color: #60a5fa; margin-top: 15px; display: inline-block;">→ Смотреть отчеты</span>
-                    </div>
-                    <div class="feature-card" onclick="showCarsDemo()">
-                        <div class="feature-icon">📈</div>
-                        <h3>Управление автопарком</h3>
-                        <p>Добавляйте несколько автомобилей, переключайтесь между ними. Каждый автомобиль имеет свою историю ТО.</p>
-                        <span style="color: #60a5fa; margin-top: 15px; display: inline-block;">→ Узнать больше</span>
-                    </div>
-                </div>
+            <div class="card">
+                <h3 style="margin-bottom: 20px;"><i class="fas fa-list-ul"></i> Последние обслуживания</h3>
+                <div id="recentList"></div>
             </div>
             
-            <div style="margin-top: 40px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 24px; padding: 30px; text-align: center; border: 1px solid rgba(96, 165, 250, 0.2);">
-                <h3 style="margin-bottom: 20px;">📊 Быстрая статистика</h3>
-                <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
-                    <div>
-                        <div style="font-size: 36px; font-weight: 700; color: #60a5fa;">4+</div>
-                        <div style="color: #94a3b8;">Автомобилей в системе</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 36px; font-weight: 700; color: #60a5fa;">12+</div>
-                        <div style="color: #94a3b8;">Деталей для диагностики</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 36px; font-weight: 700; color: #60a5fa;">50+</div>
-                        <div style="color: #94a3b8;">Рекомендаций по ТО</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 36px; font-weight: 700; color: #60a5fa;">100%</div>
-                        <div style="color: #94a3b8;">Бесплатно</div>
-                    </div>
-                </div>
+            <div style="margin-top: 30px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                <a href="/visualization.html" class="btn btn-primary"><i class="fas fa-eye"></i> Перейти к 3D визуализации</a>
+                <a href="/reports.html" class="btn btn-outline"><i class="fas fa-chart-line"></i> Смотреть отчеты</a>
             </div>
         </main>
 
         <footer class="footer">
-            <p>&copy; 2024 Car Maintenance Visualizer. Все права защищены.</p>
+            <p><i class="far fa-copyright"></i> 2024 Car Maintenance Visualizer. Все права защищены.</p>
         </footer>
-    </div>
-
-    <!-- Модальное окно для демо -->
-    <div id="demoModal" class="modal">
-        <div class="modal-content">
-            <h3>🎬 Демонстрация возможностей</h3>
-            <div style="margin: 20px 0;">
-                <div style="background: rgba(96, 165, 250, 0.1); padding: 15px; border-radius: 16px; margin-bottom: 15px;">
-                    <strong>🎨 3D Визуализация</strong>
-                    <p style="margin-top: 8px; font-size: 13px;">Кликните на автомобиль — выберите деталь, получите информацию о ТО и рекомендации.</p>
-                    <button onclick="window.location.href='/visualization.html'" class="btn btn-primary" style="margin-top: 10px;">Перейти</button>
-                </div>
-                <div style="background: rgba(96, 165, 250, 0.1); padding: 15px; border-radius: 16px; margin-bottom: 15px;">
-                    <strong>📊 Отчеты и статистика</strong>
-                    <p style="margin-top: 8px; font-size: 13px;">Смотрите полную статистику расходов, экспортируйте данные в Excel.</p>
-                    <button onclick="window.location.href='/reports.html'" class="btn btn-primary" style="margin-top: 10px;">Перейти</button>
-                </div>
-                <div style="background: rgba(96, 165, 250, 0.1); padding: 15px; border-radius: 16px;">
-                    <strong>🚗 Управление автомобилями</strong>
-                    <p style="margin-top: 8px; font-size: 13px;">Добавляйте несколько авто, переключайтесь между ними, отслеживайте историю каждого.</p>
-                    <button onclick="window.location.href='/visualization.html'" class="btn btn-primary" style="margin-top: 10px;">Перейти</button>
-                </div>
-            </div>
-            <div class="modal-buttons">
-                <button onclick="closeDemoModal()" class="btn-outline">Закрыть</button>
-            </div>
-        </div>
     </div>
 
     <script src="/js/auth.js"></script>
     <script src="/js/dashboard.js"></script>
-    <script>
-        function showDemoModal() {
-            document.getElementById('demoModal').classList.add('active');
-        }
-        function closeDemoModal() {
-            document.getElementById('demoModal').classList.remove('active');
-        }
-        function showCarsDemo() {
-            alert('🚗 Управление автопарком\n\nВы можете:\n• Добавлять несколько автомобилей\n• Переключаться между ними\n• Каждый автомобиль имеет свою историю ТО\n• Разные цвета для разных авто\n\nПерейдите в раздел "3D Визуализация" и нажмите кнопку "+" для добавления нового авто!');
-        }
-        document.getElementById('demoModal').addEventListener('click', function(e) {
-            if (e.target === this) closeDemoModal();
-        });
-    </script>
 </body>
 </html>

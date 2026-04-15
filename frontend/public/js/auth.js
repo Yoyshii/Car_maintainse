@@ -186,12 +186,4 @@ window.addEventListener('pageshow', function() {
     forceUpdateAllPages();
 });
 
-window.auth = { 
-    getToken, 
-    getUser, 
-    isAuthenticated, 
-    logout, 
-    getProfile: () => getUser(), 
-    updateUI,
-    forceUpdateAllPages 
-};
+window.auth = { getToken, getUser, isAuthenticated, logout, getProfile, updateUI };
