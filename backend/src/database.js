@@ -129,6 +129,36 @@ class Database {
         );
     }
 
+    // ========== MAINTENANCE RECORDS METHODS ==========
+async getMaintenanceRecords(carId, userId) {
+    return this.all(
+        `SELECT * FROM maintenance_records WHERE car_id = ? 
+         AND EXISTS (SELECT 1 FROM cars WHERE id = ? AND user_id = ?)
+         ORDER BY date DESC`,
+        [carId, carId, userId]
+    );
+}
+
+// ДОБАВЬТЕ ЭТОТ МЕТОД:
+async addMaintenanceRecord(carId, userId, data) {
+    // Проверяем, что автомобиль принадлежит пользователю
+    const car = await this.getCarById(carId, userId);
+    if (!car) throw new Error('Car not found');
+    
+    const { part_key, service_type, service_name, date, mileage, cost, description } = data;
+    const result = await this.run(
+        `INSERT INTO maintenance_records 
+         (car_id, part_key, service_type, service_name, date, mileage, cost, description)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [carId, part_key, service_type, service_name, date, mileage, cost, description]
+    );
+    return result.id;
+}
+
+async getAllParts() {
+    return this.all('SELECT * FROM car_parts');
+}
+
     async getAllParts() {
         return this.all('SELECT * FROM car_parts');
     }

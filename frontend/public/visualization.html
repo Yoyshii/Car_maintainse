@@ -128,7 +128,6 @@
             console.log('Токен:', token ? 'ЕСТЬ' : 'НЕТ');
             
             if (!token) {
-                console.log('Нет токена, пропускаем загрузку');
                 drawEmptyCar();
                 return;
             }
@@ -138,20 +137,12 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
-                console.log('Статус ответа:', response.status);
-                
                 if (response.ok) {
                     cars = await response.json();
                     console.log('✅ Загружено автомобилей:', cars.length);
-                    if (cars.length > 0) {
-                        console.log('Первый авто:', cars[0].brand, cars[0].model);
-                    }
                     
                     const carSelect = document.getElementById('carSelect');
-                    if (!carSelect) {
-                        console.error('Селектор carSelect не найден!');
-                        return;
-                    }
+                    if (!carSelect) return;
                     
                     if (cars.length === 0) {
                         carSelect.innerHTML = '<option value="">Нет автомобилей. Нажмите "+"</option>';
@@ -170,16 +161,14 @@
                     
                     drawCar();
                 } else {
-                    console.error('Ошибка загрузки:', response.status);
                     drawEmptyCar();
                 }
             } catch (error) {
-                console.error('Ошибка:', error);
+                console.error(error);
                 drawEmptyCar();
             }
         }
 
-        // ========== ОТРИСОВКА ПУСТОГО ХОЛСТА ==========
         function drawEmptyCar() {
             if (!ctx) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -193,7 +182,6 @@
             ctx.fillText('Нажмите "+" чтобы добавить', canvas.width/2, canvas.height/2 + 40);
         }
 
-        // ========== ОТРИСОВКА АВТОМОБИЛЯ ==========
         function drawCar() {
             if (!ctx) return;
             const currentCar = cars.find(c => c.id === currentCarId);
@@ -206,17 +194,14 @@
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Дорога
             ctx.fillStyle = '#1a1a2e';
             ctx.fillRect(0, 340, canvas.width, 110);
             
-            // Тень
             ctx.fillStyle = 'rgba(0,0,0,0.4)';
             ctx.beginPath();
             ctx.ellipse(330, 350, 220, 30, 0, 0, Math.PI * 2);
             ctx.fill();
             
-            // Кузов
             ctx.fillStyle = bodyColor;
             ctx.beginPath();
             ctx.moveTo(85, 170);
@@ -231,7 +216,6 @@
             ctx.lineTo(70, 240);
             ctx.fill();
             
-            // Крыша
             ctx.fillStyle = bodyColor;
             ctx.beginPath();
             ctx.moveTo(185, 105);
@@ -240,13 +224,11 @@
             ctx.lineTo(165, 135);
             ctx.fill();
             
-            // Окна
             ctx.fillStyle = '#38bdf8';
             ctx.fillRect(195, 115, 65, 28);
             ctx.fillRect(270, 115, 55, 28);
             ctx.fillRect(335, 115, 55, 28);
             
-            // Колеса
             ctx.fillStyle = '#1a1a2e';
             ctx.beginPath();
             ctx.ellipse(135, 290, 40, 33, 0, 0, Math.PI * 2);
@@ -255,7 +237,6 @@
             ctx.ellipse(405, 290, 40, 33, 0, 0, Math.PI * 2);
             ctx.fill();
             
-            // Фары
             ctx.fillStyle = '#fbbf24';
             ctx.beginPath();
             ctx.ellipse(65, 150, 14, 11, 0, 0, Math.PI * 2);
@@ -264,7 +245,6 @@
             ctx.ellipse(595, 150, 14, 11, 0, 0, Math.PI * 2);
             ctx.fill();
             
-            // Название модели
             ctx.fillStyle = 'rgba(255,255,255,0.8)';
             ctx.font = 'bold 14px "Segoe UI"';
             ctx.fillText(`${currentCar.brand} ${currentCar.model}`, 260, 235);
@@ -272,7 +252,6 @@
             ctx.fillText(`${currentCar.mileage.toLocaleString()} км`, 260, 255);
         }
 
-        // ========== ПОДСВЕТКА ЗОНЫ ==========
         function highlightZone(zone) {
             drawCar();
             ctx.fillStyle = zone.color;
@@ -284,7 +263,121 @@
             ctx.strokeRect(zone.x - 2, zone.y - 2, zone.w + 4, zone.h + 4);
         }
 
-        // ========== ПОКАЗ ИНФОРМАЦИИ О ДЕТАЛИ ==========
+        // ========== ДОБАВЛЕНИЕ РАБОТЫ В БАЗУ ==========
+        async function addServiceToDB(partName, serviceName, cost, carId) {
+            const token = localStorage.getItem('car_token');
+            if (!token) {
+                alert('Необходимо войти в аккаунт');
+                window.location.href = '/login.html';
+                return false;
+            }
+            
+            const partKeyMap = {
+                'Капот / Двигатель': 'engine',
+                'Крыша': 'roof',
+                'Багажник': 'trunk',
+                'Переднее левое колесо': 'wheel_fl',
+                'Переднее правое колесо': 'wheel_fr',
+                'Заднее левое колесо': 'wheel_rl',
+                'Передняя левая дверь': 'door_fl',
+                'Передняя правая дверь': 'door_fr',
+                'Левая фара': 'headlight_l',
+                'Правая фара': 'headlight_r'
+            };
+            
+            const part_key = partKeyMap[partName] || 'other';
+            const cleanServiceName = serviceName.split(' - ')[0];
+            
+            let serviceCost = cost;
+            const costMatch = serviceName.match(/(\d[\d\s]*)\s*₽/);
+            if (costMatch) {
+                serviceCost = parseInt(costMatch[1].replace(/\s/g, ''));
+            }
+            
+            const recordData = {
+                car_id: carId,
+                part_key: part_key,
+                service_type: cleanServiceName.toLowerCase().replace(/ /g, '_'),
+                service_name: cleanServiceName,
+                date: new Date().toISOString().split('T')[0],
+                mileage: cars.find(c => c.id === currentCarId)?.mileage || 0,
+                cost: serviceCost,
+                description: `Выполнено обслуживание: ${cleanServiceName}`
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/maintenance`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(recordData)
+                });
+                
+                if (response.ok) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (error) {
+                console.error(error);
+                return false;
+            }
+        }
+
+        async function addServiceWithSave(partName, serviceName, cost, carId) {
+            if (!carId) {
+                alert('Ошибка: не выбран автомобиль');
+                return;
+            }
+            
+            const success = await addServiceToDB(partName, serviceName, cost, carId);
+            if (success) {
+                alert(`✅ Работа "${serviceName.split(' - ')[0]}" добавлена в историю ТО!`);
+                const zone = zones.find(z => z.name === partName);
+                if (zone) {
+                    zone.lastService = new Date().toISOString().split('T')[0];
+                    const nextDate = new Date();
+                    nextDate.setMonth(nextDate.getMonth() + 6);
+                    zone.nextService = nextDate.toISOString().split('T')[0];
+                }
+                const currentZone = zones.find(z => z.name === partName);
+                if (currentZone) showPartInfo(currentZone);
+            } else {
+                alert('❌ Ошибка при сохранении работы.');
+            }
+        }
+
+        async function addCustomServiceWithSave(partName, carId) {
+            if (!carId) {
+                alert('Ошибка: не выбран автомобиль');
+                return;
+            }
+            
+            const serviceName = prompt('Введите название работы:');
+            if (!serviceName) return;
+            
+            const cost = parseInt(prompt('Введите стоимость (₽):', '0'));
+            if (isNaN(cost)) return;
+            
+            const success = await addServiceToDB(partName, serviceName, cost, carId);
+            if (success) {
+                alert(`✅ Работа "${serviceName}" добавлена в историю ТО!`);
+                const zone = zones.find(z => z.name === partName);
+                if (zone) {
+                    zone.lastService = new Date().toISOString().split('T')[0];
+                    const nextDate = new Date();
+                    nextDate.setMonth(nextDate.getMonth() + 6);
+                    zone.nextService = nextDate.toISOString().split('T')[0];
+                }
+                const currentZone = zones.find(z => z.name === partName);
+                if (currentZone) showPartInfo(currentZone);
+            } else {
+                alert('❌ Ошибка при сохранении работы.');
+            }
+        }
+
         function showPartInfo(zone) {
             const panel = document.getElementById('infoPanel');
             const currentCar = cars.find(c => c.id === currentCarId);
@@ -296,17 +389,28 @@
                     <div class="info-row"><span>🚗 Автомобиль</span><span>${currentCar?.brand} ${currentCar?.model}</span></div>
                     <div class="info-row"><span>📅 ПОСЛЕДНЕЕ ТО</span><span>${zone.lastService}</span></div>
                     <div class="info-row"><span>📅 СЛЕДУЮЩЕЕ ТО</span><span>${zone.nextService}</span></div>
-                    <div class="info-row"><span>💰 СТОИМОСТЬ</span><span>${zone.cost} ₽</span></div>
+                    <div class="info-row"><span>💰 ПРИМЕРНАЯ СТОИМОСТЬ</span><span>${zone.cost} ₽</span></div>
                 </div>
                 <div style="margin-top: 16px;">
                     <div style="color: #fbbf24;">🔧 РЕКОМЕНДУЕМЫЕ РАБОТЫ</div>
-                    ${zone.services.map(s => `<div class="service-item" onclick="alert('✅ Работа добавлена: ${s}')"><span>${s}</span><span>→</span></div>`).join('')}
+                    ${zone.services.map(s => `
+                        <div class="service-item" onclick="addServiceWithSave('${zone.name}', '${s}', ${zone.cost}, ${currentCar?.id})">
+                            <span>${s}</span>
+                            <span style="color: #10b981;"><i class="fas fa-save"></i> Сохранить</span>
+                        </div>
+                    `).join('')}
                 </div>
-                <button onclick="resetPanel()" class="btn-outline" style="margin-top: 16px;">← НАЗАД</button>
+                <div style="margin-top: 16px;">
+                    <div style="color: #fbbf24;">➕ СВОЯ РАБОТА</div>
+                    <div class="service-item" onclick="addCustomServiceWithSave('${zone.name}', ${currentCar?.id})">
+                        <span><i class="fas fa-plus"></i> Добавить свою работу</span>
+                        <span style="color: #10b981;"><i class="fas fa-save"></i> Сохранить</span>
+                    </div>
+                </div>
+                <button onclick="resetPanel()" class="btn-outline" style="margin-top: 16px; width: 100%;">← НАЗАД</button>
             `;
         }
 
-        // ========== СБРОС ПАНЕЛИ ==========
         function resetPanel() {
             const panel = document.getElementById('infoPanel');
             panel.innerHTML = `
@@ -402,15 +506,13 @@
 
         // ========== ИНИЦИАЛИЗАЦИЯ ==========
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 DOM загружен, инициализация 3D визуализации...');
+            console.log('🚀 DOM загружен');
             
-            // Кнопка добавления автомобиля
             const addBtn = document.getElementById('addCarBtn');
             if (addBtn) {
                 addBtn.onclick = () => window.location.href = '/add-car.html';
             }
             
-            // Селектор автомобилей
             const carSelect = document.getElementById('carSelect');
             if (carSelect) {
                 carSelect.onchange = (e) => {
@@ -419,7 +521,6 @@
                 };
             }
             
-            // Обновление UI авторизации
             const isAuth = !!localStorage.getItem('car_token');
             const authButtons = document.getElementById('authButtons');
             const userMenu = document.getElementById('userMenu');
@@ -437,10 +538,13 @@
                 if (userMenu) userMenu.style.display = 'none';
             }
             
-            // Загружаем автомобили
             loadCars();
             resetPanel();
         });
+        
+        // Делаем функции глобальными для onclick
+        window.addServiceWithSave = addServiceWithSave;
+        window.addCustomServiceWithSave = addCustomServiceWithSave;
     </script>
 </body>
 </html>

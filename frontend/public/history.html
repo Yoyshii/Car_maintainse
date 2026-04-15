@@ -7,6 +7,53 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Дополнительные стили для таблицы */
+        .history-table {
+            width: 100%;
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            border-collapse: collapse;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .history-table th, 
+        .history-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+        
+        .history-table th {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--accent-primary-light);
+            font-weight: 600;
+            border-bottom: 2px solid var(--accent-primary);
+        }
+        
+        .history-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .history-table td:last-child {
+            color: var(--success);
+            font-weight: 600;
+        }
+        
+        .empty-history {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-history i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: var(--text-muted);
+        }
+    </style>
 </head>
 <body>
     <div class="app">
@@ -38,8 +85,10 @@
 
         <main class="main-content">
             <h2><i class="fas fa-history"></i> История технического обслуживания</h2>
-            <div id="historyContainer" style="margin-top: 20px;">
-                <div class="card" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-pulse"></i> Загрузка истории...</div>
+            <div id="historyContainer" style="margin-top: 24px;">
+                <div class="card" style="text-align: center; padding: 40px;">
+                    <i class="fas fa-spinner fa-pulse"></i> Загрузка истории...
+                </div>
             </div>
         </main>
 
@@ -58,7 +107,13 @@
             console.log('Токен:', token ? 'есть' : 'нет');
             
             if (!token) {
-                document.getElementById('historyContainer').innerHTML = '<div class="card" style="text-align: center; padding: 40px;"><i class="fas fa-lock"></i> Войдите в аккаунт для просмотра истории</div>';
+                document.getElementById('historyContainer').innerHTML = `
+                    <div class="card empty-history">
+                        <i class="fas fa-lock"></i>
+                        <p>Войдите в аккаунт для просмотра истории</p>
+                        <a href="/login.html" class="btn btn-primary" style="margin-top: 16px; display: inline-block;">Войти</a>
+                    </div>
+                `;
                 return;
             }
             
@@ -76,7 +131,12 @@
                 }
             } catch (error) {
                 console.error(error);
-                document.getElementById('historyContainer').innerHTML = '<div class="card" style="text-align: center; padding: 40px;"><i class="fas fa-exclamation-triangle"></i> Ошибка загрузки истории</div>';
+                document.getElementById('historyContainer').innerHTML = `
+                    <div class="card empty-history">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Ошибка загрузки истории</p>
+                    </div>
+                `;
             }
         }
         
@@ -84,24 +144,38 @@
             const container = document.getElementById('historyContainer');
             
             if (records.length === 0) {
-                container.innerHTML = '<div class="card" style="text-align: center; padding: 40px;"><i class="fas fa-inbox"></i> История обслуживания пуста. Добавьте первую запись через 3D визуализацию!</div>';
+                container.innerHTML = `
+                    <div class="card empty-history">
+                        <i class="fas fa-inbox"></i>
+                        <p>История обслуживания пуста</p>
+                        <p style="font-size: 14px; margin-top: 8px;">Добавьте первую запись через 3D визуализацию</p>
+                        <a href="/visualization.html" class="btn btn-primary" style="margin-top: 16px; display: inline-block;">Перейти к визуализации</a>
+                    </div>
+                `;
                 return;
             }
             
             container.innerHTML = `
                 <table class="history-table">
                     <thead>
-                        <tr><th><i class="fas fa-calendar-alt"></i> Дата</th><th><i class="fas fa-car"></i> Автомобиль</th><th><i class="fas fa-tools"></i> Услуга</th><th><i class="fas fa-microchip"></i> Деталь</th><th><i class="fas fa-road"></i> Пробег</th><th><i class="fas fa-ruble-sign"></i> Стоимость</th></tr>
+                        <tr>
+                            <th><i class="fas fa-calendar-alt"></i> Дата</th>
+                            <th><i class="fas fa-car"></i> Автомобиль</th>
+                            <th><i class="fas fa-tools"></i> Услуга</th>
+                            <th><i class="fas fa-microchip"></i> Деталь</th>
+                            <th><i class="fas fa-road"></i> Пробег</th>
+                            <th><i class="fas fa-ruble-sign"></i> Стоимость</th>
+                        </tr>
                     </thead>
                     <tbody>
                         ${records.map(record => `
                             <tr>
-                                <td>${record.date || '-'}</td
-                                <td>${record.car_brand || ''} ${record.car_model || ''}</td
-                                <td>${record.service_name || record.service_type || '-'}</td
-                                <td>${record.part_key || '-'}</td
-                                <td>${record.mileage ? record.mileage.toLocaleString() + ' км' : '-'}</td
-                                <td style="color: #10b981;">${record.cost ? record.cost.toLocaleString() + ' ₽' : '-'}</td
+                                <td>${record.date || '-'}</td>
+                                <td><strong>${record.car_brand || ''} ${record.car_model || ''}</strong></td>
+                                <td>${record.service_name || record.service_type || '-'}</td>
+                                <td>${record.part_key || '-'}</td>
+                                <td>${record.mileage ? record.mileage.toLocaleString() + ' км' : '-'}</td>
+                                <td>${record.cost ? record.cost.toLocaleString() + ' ₽' : '-'}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -126,11 +200,18 @@
             } else {
                 if (authButtons) authButtons.style.display = 'flex';
                 if (userMenu) userMenu.style.display = 'none';
-                document.getElementById('historyContainer').innerHTML = '<div class="card" style="text-align: center; padding: 40px;"><i class="fas fa-lock"></i> Войдите в аккаунт для просмотра истории</div>';
+                document.getElementById('historyContainer').innerHTML = `
+                    <div class="card empty-history">
+                        <i class="fas fa-lock"></i>
+                        <p>Войдите в аккаунт для просмотра истории</p>
+                        <a href="/login.html" class="btn btn-primary" style="margin-top: 16px; display: inline-block;">Войти</a>
+                    </div>
+                `;
             }
         }
         
         document.addEventListener('DOMContentLoaded', updateUI);
+        window.addEventListener('storage', updateUI);
     </script>
 </body>
 </html>
