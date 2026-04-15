@@ -7,6 +7,69 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .car-canvas-area {
+            position: relative;
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+        .car-image-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            min-height: 400px;
+            background: #1e293b;
+            border-radius: var(--radius-lg);
+        }
+        .car-image {
+            width: 100%;
+            height: auto;
+            border-radius: var(--radius-lg);
+            display: block;
+        }
+        .hotspot {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: rgba(79, 70, 229, 0.8);
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(79, 70, 229, 0.5);
+        }
+        .hotspot:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            background: rgba(79, 70, 229, 1);
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.8);
+        }
+        .hotspot::after {
+            content: attr(data-name);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            white-space: nowrap;
+            margin-bottom: 5px;
+            display: none;
+            border: 1px solid var(--border);
+        }
+        .hotspot:hover::after { display: block; }
+        .edit-mode .hotspot { cursor: move; background: rgba(239, 68, 68, 0.8); }
+        .edit-mode .hotspot:hover { background: rgba(239, 68, 68, 1); }
+        .edit-controls { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; justify-content: center; }
+        .edit-controls .btn { padding: 8px 16px; font-size: 12px; }
+        .coord-info { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 10px; }
+    </style>
 </head>
 <body>
     <div class="app">
@@ -20,17 +83,13 @@
             <div class="nav-menu">
                 <a href="/" class="nav-link"><i class="fas fa-home"></i> Главная</a>
                 <a href="/visualization.html" class="nav-link active"><i class="fas fa-cube"></i> 3D Визуализация</a>
-                
                 <div id="authButtons" style="display: flex; gap: 12px;">
                     <a href="/login.html" class="btn btn-outline"><i class="fas fa-sign-in-alt"></i> Вход</a>
                     <a href="/register.html" class="btn btn-primary"><i class="fas fa-user-plus"></i> Регистрация</a>
                 </div>
-                
                 <div id="userMenu" style="display: none; align-items: center; gap: 16px;">
                     <div class="car-selector">
-                        <select id="carSelect">
-                            <option>Загрузка...</option>
-                        </select>
+                        <select id="carSelect"><option>Загрузка...</option></select>
                         <button id="addCarBtn" title="Добавить автомобиль"><i class="fas fa-plus"></i></button>
                     </div>
                     <span class="user-name" id="userName"></span>
@@ -42,27 +101,23 @@
 
         <main class="main-content viz-container">
             <div class="car-canvas-area">
-                <canvas id="carCanvas" width="800" height="500"></canvas>
-                <div class="hint">
-                    <span><i class="fas fa-mouse-pointer"></i> Нажмите на любую цветную деталь</span>
-                    <span><i class="fas fa-eye"></i> При наведении подсвечивается</span>
-                    <span><i class="fas fa-exchange-alt"></i> Можно переключать автомобили</span>
+                <div class="car-image-container" id="carImageContainer">
+                    <img id="carImage" class="car-image" src="car.jpg" alt="Car">
                 </div>
+                <div class="hint">
+                    <span><i class="fas fa-mouse-pointer"></i> Нажмите на точку для выбора детали</span>
+                    <span><i class="fas fa-edit"></i> Включите "Режим редактирования" чтобы двигать точки</span>
+                </div>
+                <div class="edit-controls">
+                    <button id="toggleEditMode" class="btn btn-outline"><i class="fas fa-edit"></i> Режим редактирования</button>
+                    <button id="savePositionsBtn" class="btn btn-success" style="display: none;"><i class="fas fa-save"></i> Сохранить позиции</button>
+                    <button id="resetPositionsBtn" class="btn btn-warning" style="display: none;"><i class="fas fa-undo"></i> Сбросить</button>
+                </div>
+                <div class="coord-info" id="coordInfo"></div>
             </div>
             <div class="info-panel" id="infoPanel">
-                <div class="panel-header">
-                    <div class="led"></div>
-                    <span><i class="fas fa-stethoscope"></i> СИСТЕМА ДИАГНОСТИКИ</span>
-                </div>
-                <div class="placeholder">
-                    <div><i class="fas fa-car" style="font-size: 64px;"></i></div>
-                    <div>ВЫБЕРИТЕ ДЕТАЛЬ</div>
-                    <div>Нажмите на любую цветную область автомобиля</div>
-                </div>
-                <div id="authRequiredMessage" style="display: none; text-align: center; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 16px; margin-top: 20px;">
-                    <p><i class="fas fa-lock"></i> Для обновления пробега и добавления автомобилей</p>
-                    <p>необходимо <a href="/login.html" style="color: #4f46e5;">войти в аккаунт</a> или <a href="/register.html" style="color: #4f46e5;">зарегистрироваться</a></p>
-                </div>
+                <div class="panel-header"><div class="led"></div><span><i class="fas fa-stethoscope"></i> СИСТЕМА ДИАГНОСТИКИ</span></div>
+                <div class="placeholder"><div><i class="fas fa-car" style="font-size: 64px;"></i></div><div>ВЫБЕРИТЕ ДЕТАЛЬ</div><div>Нажмите на точку на изображении автомобиля</div></div>
                 <div style="padding: 20px;">
                     <input type="number" id="mileageInput" placeholder="Обновить пробег (км)">
                     <button id="updateMileageBtn" class="btn btn-primary" style="width: 100%; margin-top: 12px;"><i class="fas fa-sync-alt"></i> ОБНОВИТЬ ПРОБЕГ</button>
@@ -70,479 +125,326 @@
                 </div>
             </div>
         </main>
-
-        <footer class="footer">
-            <p><i class="far fa-copyright"></i> 2024 Car Maintenance Visualizer. Все права защищены.</p>
-        </footer>
+        <footer class="footer"><p><i class="far fa-copyright"></i> 2024 Car Maintenance Visualizer. Все права защищены.</p></footer>
     </div>
 
     <script>
-        // ========== КОНФИГУРАЦИЯ ==========
         const API_URL = 'http://localhost:5000/api';
         let currentCarId = null;
         let cars = [];
-
-        const canvas = document.getElementById('carCanvas');
-        const ctx = canvas.getContext('2d');
-
-        // ========== ЗОНЫ ДЛЯ КЛИКОВ ==========
-        const zones = [
-            { id: 'hood', name: 'Капот / Двигатель', x: 95, y: 105, w: 120, h: 65, color: '#3b82f6',
-              services: ['Замена масла (5W-30) - 3 500 ₽', 'Замена воздушного фильтра - 1 200 ₽', 'Замена свечей зажигания - 2 500 ₽'],
-              status: 'warning', lastService: '2024-01-15', nextService: '2024-06-15', cost: 3500,
-              icon: '🔧', description: 'Двигатель, фильтры, жидкости' },
-            { id: 'roof', name: 'Крыша', x: 250, y: 75, w: 130, h: 35, color: '#8b5cf6',
-              services: ['Проверка уплотнителей - 500 ₽'], status: 'good', lastService: '2024-01-05', nextService: '2024-12-05', cost: 500,
-              icon: '🏠', description: 'Крыша, обтекаемость' },
-            { id: 'trunk', name: 'Багажник', x: 470, y: 115, w: 85, h: 55, color: '#ec489a',
-              services: ['Регулировка замка - 1 000 ₽'], status: 'good', lastService: '2024-01-10', nextService: '2024-06-10', cost: 1000,
-              icon: '📦', description: 'Замок, гидравлика' },
-            { id: 'wheel_fl', name: 'Переднее левое колесо', x: 110, y: 250, w: 50, h: 48, color: '#10b981',
-              services: ['Проверка давления - 200 ₽', 'Балансировка - 1 200 ₽'], status: 'good', lastService: '2024-02-01', nextService: '2024-05-01', cost: 1200,
-              icon: '🛞', description: 'Шина, диск, балансировка' },
-            { id: 'wheel_fr', name: 'Переднее правое колесо', x: 400, y: 250, w: 50, h: 48, color: '#10b981',
-              services: ['Проверка давления - 200 ₽', 'Балансировка - 1 200 ₽'], status: 'good', lastService: '2024-02-01', nextService: '2024-05-01', cost: 1200,
-              icon: '🛞', description: 'Шина, диск, балансировка' },
-            { id: 'wheel_rl', name: 'Заднее левое колесо', x: 490, y: 255, w: 48, h: 45, color: '#10b981',
-              services: ['Проверка давления - 200 ₽', 'Балансировка - 1 200 ₽'], status: 'good', lastService: '2024-02-01', nextService: '2024-05-01', cost: 1200,
-              icon: '🛞', description: 'Шина, диск, балансировка' },
-            { id: 'door_fl', name: 'Передняя левая дверь', x: 200, y: 135, w: 50, h: 95, color: '#f59e0b',
-              services: ['Смазка петель - 500 ₽'], status: 'good', lastService: '2024-01-20', nextService: '2024-07-20', cost: 500,
-              icon: '🚪', description: 'Петли, замки' },
-            { id: 'door_fr', name: 'Передняя правая дверь', x: 310, y: 135, w: 50, h: 95, color: '#f59e0b',
-              services: ['Смазка петель - 500 ₽'], status: 'good', lastService: '2024-01-20', nextService: '2024-07-20', cost: 500,
-              icon: '🚪', description: 'Петли, замки' },
-            { id: 'headlight_l', name: 'Левая фара', x: 75, y: 115, w: 35, h: 25, color: '#fbbf24',
-              services: ['Замена лампы - 800 ₽'], status: 'warning', lastService: '2024-02-10', nextService: '2024-08-10', cost: 800,
-              icon: '💡', description: 'Лампы, регулировка' },
-            { id: 'headlight_r', name: 'Правая фара', x: 550, y: 115, w: 35, h: 25, color: '#fbbf24',
-              services: ['Замена лампы - 800 ₽'], status: 'good', lastService: '2024-02-10', nextService: '2024-08-10', cost: 800,
-              icon: '💡', description: 'Лампы, регулировка' }
+        
+        // ========== ВСЕ ТОЧКИ (13 штук) ==========
+        let hotspots = [
+            // Существующие точки
+            { id: 'hood', name: 'Капот / Двигатель', x: 20, y: 25, color: '#3b82f6',
+              services: ['Замена масла (5W-30) - 3 500 ₽', 'Замена воздушного фильтра - 1 200 ₽', 'Замена свечей зажигания - 2 500 ₽', 'Замена охлаждающей жидкости - 2 000 ₽'],
+              status: 'warning', lastService: '2024-01-15', nextService: '2024-06-15', cost: 3500, icon: '🔧' },
+            { id: 'roof', name: 'Крыша', x: 50, y: 15, color: '#8b5cf6',
+              services: ['Проверка уплотнителей - 500 ₽', 'Мойка крыши - 300 ₽', 'Антигравийная пленка - 5 000 ₽'],
+              status: 'good', lastService: '2024-01-05', nextService: '2024-12-05', cost: 500, icon: '🏠' },
+            { id: 'trunk', name: 'Багажник', x: 85, y: 30, color: '#ec489a',
+              services: ['Регулировка замка - 1 000 ₽', 'Замена гидравлических упоров - 2 500 ₽', 'Замена лампы подсветки - 400 ₽'],
+              status: 'good', lastService: '2024-01-10', nextService: '2024-06-10', cost: 1000, icon: '📦' },
+            
+            // Передние колёса
+            { id: 'wheel_fl', name: 'Переднее левое колесо', x: 15, y: 70, color: '#10b981',
+              services: ['Проверка давления - 200 ₽', 'Балансировка - 1 200 ₽', 'Замена шины - 8 000 ₽', 'Сход-развал - 2 500 ₽'],
+              status: 'good', lastService: '2024-02-01', nextService: '2024-05-01', cost: 1200, icon: '🛞' },
+            { id: 'wheel_fr', name: 'Переднее правое колесо', x: 65, y: 70, color: '#10b981',
+              services: ['Проверка давления - 200 ₽', 'Балансировка - 1 200 ₽', 'Замена шины - 8 000 ₽', 'Сход-развал - 2 500 ₽'],
+              status: 'good', lastService: '2024-02-01', nextService: '2024-05-01', cost: 1200, icon: '🛞' },
+            
+            // НОВЫЕ: задние колёса
+            { id: 'wheel_rl', name: 'Заднее левое колесо', x: 35, y: 85, color: '#10b981',
+              services: ['Проверка давления - 200 ₽', 'Балансировка - 1 200 ₽', 'Замена шины - 8 000 ₽', 'Проверка подшипника ступицы - 500 ₽'],
+              status: 'good', lastService: '2024-02-01', nextService: '2024-05-01', cost: 1200, icon: '🛞' },
+            { id: 'wheel_rr', name: 'Заднее правое колесо', x: 78, y: 85, color: '#10b981',
+              services: ['Проверка давления - 200 ₽', 'Балансировка - 1 200 ₽', 'Замена шины - 8 000 ₽', 'Проверка подшипника ступицы - 500 ₽'],
+              status: 'good', lastService: '2024-02-01', nextService: '2024-05-01', cost: 1200, icon: '🛞' },
+            
+            // Передние двери
+            { id: 'door_fl', name: 'Передняя левая дверь', x: 30, y: 40, color: '#f59e0b',
+              services: ['Смазка петель - 500 ₽', 'Регулировка замка - 600 ₽', 'Замена стеклоподъемника - 2 500 ₽', 'Замена уплотнителя - 1 500 ₽'],
+              status: 'good', lastService: '2024-01-20', nextService: '2024-07-20', cost: 500, icon: '🚪' },
+            { id: 'door_fr', name: 'Передняя правая дверь', x: 55, y: 40, color: '#f59e0b',
+              services: ['Смазка петель - 500 ₽', 'Регулировка замка - 600 ₽', 'Замена стеклоподъемника - 2 500 ₽', 'Замена уплотнителя - 1 500 ₽'],
+              status: 'good', lastService: '2024-01-20', nextService: '2024-07-20', cost: 500, icon: '🚪' },
+            
+            // НОВЫЕ: задние двери
+            { id: 'door_rl', name: 'Задняя левая дверь', x: 40, y: 60, color: '#f59e0b',
+              services: ['Смазка петель - 500 ₽', 'Регулировка замка - 600 ₽', 'Замена стеклоподъемника - 2 500 ₽', 'Детская блокировка - 300 ₽'],
+              status: 'good', lastService: '2024-01-20', nextService: '2024-07-20', cost: 500, icon: '🚪' },
+            { id: 'door_rr', name: 'Задняя правая дверь', x: 70, y: 60, color: '#f59e0b',
+              services: ['Смазка петель - 500 ₽', 'Регулировка замка - 600 ₽', 'Замена стеклоподъемника - 2 500 ₽', 'Детская блокировка - 300 ₽'],
+              status: 'good', lastService: '2024-01-20', nextService: '2024-07-20', cost: 500, icon: '🚪' },
+            
+            // Фары
+            { id: 'headlight_l', name: 'Левая фара', x: 12, y: 22, color: '#fbbf24',
+              services: ['Замена лампы - 800 ₽', 'Регулировка света - 600 ₽', 'Полировка линз - 1 500 ₽', 'Замена блока розжига - 3 000 ₽'],
+              status: 'warning', lastService: '2024-02-10', nextService: '2024-08-10', cost: 800, icon: '💡' },
+            { id: 'headlight_r', name: 'Правая фара', x: 78, y: 22, color: '#fbbf24',
+              services: ['Замена лампы - 800 ₽', 'Регулировка света - 600 ₽', 'Полировка линз - 1 500 ₽', 'Замена блока розжига - 3 000 ₽'],
+              status: 'good', lastService: '2024-02-10', nextService: '2024-08-10', cost: 800, icon: '💡' },
+            
+            // НОВАЯ: выхлопная система
+            { id: 'exhaust', name: 'Выхлопная система', x: 90, y: 75, color: '#ef4444',
+              services: ['Диагностика выхлопа - 1 000 ₽', 'Замена глушителя - 5 000 ₽', 'Замена катализатора - 15 000 ₽', 'Замена лямбда-зонда - 4 000 ₽', 'Ремонт выпускного коллектора - 7 000 ₽'],
+              status: 'good', lastService: '2024-01-25', nextService: '2024-07-25', cost: 1000, icon: '🔊' }
         ];
-
-        // ========== ФУНКЦИЯ ЗАГРУЗКИ АВТОМОБИЛЕЙ ==========
-        async function loadCars() {
-            console.log('🔄 loadCars вызвана');
-            
-            const token = localStorage.getItem('car_token');
-            console.log('Токен:', token ? 'ЕСТЬ' : 'НЕТ');
-            
-            if (!token) {
-                drawEmptyCar();
-                return;
+        
+        let editMode = false;
+        let draggedHotspot = null;
+        let dragOffsetX = 0, dragOffsetY = 0;
+        
+        const container = document.getElementById('carImageContainer');
+        const carImage = document.getElementById('carImage');
+        const coordInfo = document.getElementById('coordInfo');
+        const toggleEditBtn = document.getElementById('toggleEditMode');
+        const savePositionsBtn = document.getElementById('savePositionsBtn');
+        const resetPositionsBtn = document.getElementById('resetPositionsBtn');
+        
+        function waitForImage() {
+            return new Promise((resolve) => {
+                if (carImage.complete && carImage.naturalHeight !== 0) resolve();
+                else { carImage.onload = resolve; carImage.onerror = resolve; }
+            });
+        }
+        
+        function loadHotspotsFromStorage() {
+            const saved = localStorage.getItem('car_hotspots');
+            if (saved) {
+                try {
+                    const savedHotspots = JSON.parse(saved);
+                    hotspots.forEach(hotspot => {
+                        const savedSpot = savedHotspots.find(s => s.id === hotspot.id);
+                        if (savedSpot) { hotspot.x = savedSpot.x; hotspot.y = savedSpot.y; }
+                    });
+                } catch(e) {}
             }
+        }
+        
+        function saveHotspotsToStorage() {
+            const toSave = hotspots.map(h => ({ id: h.id, x: h.x, y: h.y }));
+            localStorage.setItem('car_hotspots', JSON.stringify(toSave));
+            alert('✅ Позиции точек сохранены!');
+        }
+        
+        function resetHotspots() {
+            if (confirm('Сбросить все точки на исходные позиции?')) {
+                localStorage.removeItem('car_hotspots');
+                location.reload();
+            }
+        }
+        
+        async function renderHotspots() {
+            await waitForImage();
+            document.querySelectorAll('.hotspot').forEach(el => el.remove());
+            const rect = container.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
             
-            try {
-                const response = await fetch(`${API_URL}/cars`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+            hotspots.forEach(hotspot => {
+                const dot = document.createElement('div');
+                dot.className = 'hotspot';
+                dot.setAttribute('data-id', hotspot.id);
+                dot.setAttribute('data-name', hotspot.name);
+                dot.style.left = (hotspot.x / 100) * rect.width + 'px';
+                dot.style.top = (hotspot.y / 100) * rect.height + 'px';
+                dot.style.background = hotspot.color;
+                dot.addEventListener('click', (e) => { e.stopPropagation(); if (!editMode) showPartInfo(hotspot); });
+                dot.addEventListener('mousedown', (e) => {
+                    if (!editMode) return;
+                    e.preventDefault(); e.stopPropagation();
+                    draggedHotspot = hotspot;
+                    const dotRect = dot.getBoundingClientRect();
+                    dragOffsetX = e.clientX - dotRect.left;
+                    dragOffsetY = e.clientY - dotRect.top;
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
                 });
-                
+                container.appendChild(dot);
+            });
+        }
+        
+        function onMouseMove(e) {
+            if (!draggedHotspot) return;
+            const rect = container.getBoundingClientRect();
+            let x = e.clientX - rect.left - dragOffsetX;
+            let y = e.clientY - rect.top - dragOffsetY;
+            x = Math.min(Math.max(x, 0), rect.width - 24);
+            y = Math.min(Math.max(y, 0), rect.height - 24);
+            draggedHotspot.x = (x / rect.width) * 100;
+            draggedHotspot.y = (y / rect.height) * 100;
+            const dot = document.querySelector(`.hotspot[data-id="${draggedHotspot.id}"]`);
+            if (dot) { dot.style.left = x + 'px'; dot.style.top = y + 'px'; }
+            coordInfo.innerHTML = `Перемещение: ${draggedHotspot.name} (${Math.round(draggedHotspot.x)}%, ${Math.round(draggedHotspot.y)}%)`;
+        }
+        
+        function onMouseUp() {
+            draggedHotspot = null;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+        
+        function setEditMode(enabled) {
+            editMode = enabled;
+            const area = document.querySelector('.car-canvas-area');
+            if (enabled) {
+                area.classList.add('edit-mode');
+                toggleEditBtn.innerHTML = '<i class="fas fa-eye"></i> Выйти из редактирования';
+                toggleEditBtn.classList.remove('btn-outline'); toggleEditBtn.classList.add('btn-primary');
+                savePositionsBtn.style.display = 'inline-flex';
+                resetPositionsBtn.style.display = 'inline-flex';
+                coordInfo.innerHTML = 'Режим редактирования: перетаскивайте точки мышью';
+            } else {
+                area.classList.remove('edit-mode');
+                toggleEditBtn.innerHTML = '<i class="fas fa-edit"></i> Режим редактирования';
+                toggleEditBtn.classList.remove('btn-primary'); toggleEditBtn.classList.add('btn-outline');
+                savePositionsBtn.style.display = 'none';
+                resetPositionsBtn.style.display = 'none';
+                coordInfo.innerHTML = '';
+            }
+        }
+        
+        async function loadCars() {
+            const token = localStorage.getItem('car_token');
+            if (!token) return;
+            try {
+                const response = await fetch(`${API_URL}/cars`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (response.ok) {
                     cars = await response.json();
-                    console.log('✅ Загружено автомобилей:', cars.length);
-                    
                     const carSelect = document.getElementById('carSelect');
-                    if (!carSelect) return;
-                    
-                    if (cars.length === 0) {
-                        carSelect.innerHTML = '<option value="">Нет автомобилей. Нажмите "+"</option>';
-                        drawEmptyCar();
-                        return;
+                    if (carSelect && cars.length > 0) {
+                        carSelect.innerHTML = cars.map(car => `<option value="${car.id}">${car.brand} ${car.model} (${car.year}) - ${car.mileage.toLocaleString()} км</option>`).join('');
+                        if (!currentCarId) { currentCarId = cars[0].id; carSelect.value = currentCarId; }
                     }
-                    
-                    carSelect.innerHTML = cars.map(car => 
-                        `<option value="${car.id}" ${currentCarId === car.id ? 'selected' : ''}>${car.brand} ${car.model} (${car.year}) - ${car.mileage.toLocaleString()} км</option>`
-                    ).join('');
-                    
-                    if (!currentCarId && cars.length > 0) {
-                        currentCarId = cars[0].id;
-                        carSelect.value = currentCarId;
-                    }
-                    
-                    drawCar();
-                } else {
-                    drawEmptyCar();
                 }
-            } catch (error) {
-                console.error(error);
-                drawEmptyCar();
-            }
+            } catch(e) { console.error(e); }
         }
-
-        function drawEmptyCar() {
-            if (!ctx) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#1e293b';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#94a3b8';
-            ctx.font = '18px "Segoe UI"';
-            ctx.textAlign = 'center';
-            ctx.fillText('Нет добавленных автомобилей', canvas.width/2, canvas.height/2);
-            ctx.font = '14px "Segoe UI"';
-            ctx.fillText('Нажмите "+" чтобы добавить', canvas.width/2, canvas.height/2 + 40);
-        }
-
-        function drawCar() {
-            if (!ctx) return;
-            const currentCar = cars.find(c => c.id === currentCarId);
-            if (!currentCar) {
-                drawEmptyCar();
-                return;
-            }
-            
-            const bodyColor = currentCar.color || '#dc2626';
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.fillStyle = '#1a1a2e';
-            ctx.fillRect(0, 340, canvas.width, 110);
-            
-            ctx.fillStyle = 'rgba(0,0,0,0.4)';
-            ctx.beginPath();
-            ctx.ellipse(330, 350, 220, 30, 0, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = bodyColor;
-            ctx.beginPath();
-            ctx.moveTo(85, 170);
-            ctx.lineTo(150, 105);
-            ctx.lineTo(420, 105);
-            ctx.lineTo(575, 170);
-            ctx.lineTo(555, 250);
-            ctx.lineTo(515, 275);
-            ctx.lineTo(440, 285);
-            ctx.lineTo(125, 285);
-            ctx.lineTo(105, 265);
-            ctx.lineTo(70, 240);
-            ctx.fill();
-            
-            ctx.fillStyle = bodyColor;
-            ctx.beginPath();
-            ctx.moveTo(185, 105);
-            ctx.lineTo(385, 105);
-            ctx.lineTo(405, 135);
-            ctx.lineTo(165, 135);
-            ctx.fill();
-            
-            ctx.fillStyle = '#38bdf8';
-            ctx.fillRect(195, 115, 65, 28);
-            ctx.fillRect(270, 115, 55, 28);
-            ctx.fillRect(335, 115, 55, 28);
-            
-            ctx.fillStyle = '#1a1a2e';
-            ctx.beginPath();
-            ctx.ellipse(135, 290, 40, 33, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(405, 290, 40, 33, 0, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = '#fbbf24';
-            ctx.beginPath();
-            ctx.ellipse(65, 150, 14, 11, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(595, 150, 14, 11, 0, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = 'rgba(255,255,255,0.8)';
-            ctx.font = 'bold 14px "Segoe UI"';
-            ctx.fillText(`${currentCar.brand} ${currentCar.model}`, 260, 235);
-            ctx.font = '12px "Segoe UI"';
-            ctx.fillText(`${currentCar.mileage.toLocaleString()} км`, 260, 255);
-        }
-
-        function highlightZone(zone) {
-            drawCar();
-            ctx.fillStyle = zone.color;
-            ctx.globalAlpha = 0.25;
-            ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
-            ctx.globalAlpha = 1;
-            ctx.strokeStyle = zone.color;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(zone.x - 2, zone.y - 2, zone.w + 4, zone.h + 4);
-        }
-
-        // ========== ДОБАВЛЕНИЕ РАБОТЫ В БАЗУ ==========
+        
         async function addServiceToDB(partName, serviceName, cost, carId) {
             const token = localStorage.getItem('car_token');
-            if (!token) {
-                alert('Необходимо войти в аккаунт');
-                window.location.href = '/login.html';
-                return false;
-            }
-            
+            if (!token) { alert('Необходимо войти в аккаунт'); window.location.href = '/login.html'; return false; }
             const partKeyMap = {
-                'Капот / Двигатель': 'engine',
-                'Крыша': 'roof',
-                'Багажник': 'trunk',
-                'Переднее левое колесо': 'wheel_fl',
-                'Переднее правое колесо': 'wheel_fr',
-                'Заднее левое колесо': 'wheel_rl',
-                'Передняя левая дверь': 'door_fl',
-                'Передняя правая дверь': 'door_fr',
-                'Левая фара': 'headlight_l',
-                'Правая фара': 'headlight_r'
+                'Капот / Двигатель': 'engine', 'Крыша': 'roof', 'Багажник': 'trunk',
+                'Переднее левое колесо': 'wheel_fl', 'Переднее правое колесо': 'wheel_fr',
+                'Заднее левое колесо': 'wheel_rl', 'Заднее правое колесо': 'wheel_rr',
+                'Передняя левая дверь': 'door_fl', 'Передняя правая дверь': 'door_fr',
+                'Задняя левая дверь': 'door_rl', 'Задняя правая дверь': 'door_rr',
+                'Левая фара': 'headlight_l', 'Правая фара': 'headlight_r',
+                'Выхлопная система': 'exhaust'
             };
-            
             const part_key = partKeyMap[partName] || 'other';
             const cleanServiceName = serviceName.split(' - ')[0];
-            
             let serviceCost = cost;
             const costMatch = serviceName.match(/(\d[\d\s]*)\s*₽/);
-            if (costMatch) {
-                serviceCost = parseInt(costMatch[1].replace(/\s/g, ''));
-            }
-            
+            if (costMatch) serviceCost = parseInt(costMatch[1].replace(/\s/g, ''));
             const recordData = {
-                car_id: carId,
-                part_key: part_key,
-                service_type: cleanServiceName.toLowerCase().replace(/ /g, '_'),
-                service_name: cleanServiceName,
-                date: new Date().toISOString().split('T')[0],
-                mileage: cars.find(c => c.id === currentCarId)?.mileage || 0,
-                cost: serviceCost,
+                car_id: carId, part_key, service_type: cleanServiceName.toLowerCase().replace(/ /g, '_'),
+                service_name: cleanServiceName, date: new Date().toISOString().split('T')[0],
+                mileage: cars.find(c => c.id === currentCarId)?.mileage || 0, cost: serviceCost,
                 description: `Выполнено обслуживание: ${cleanServiceName}`
             };
-            
             try {
-                const response = await fetch(`${API_URL}/maintenance`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(recordData)
-                });
-                
-                if (response.ok) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } catch (error) {
-                console.error(error);
-                return false;
-            }
+                const response = await fetch(`${API_URL}/maintenance`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(recordData) });
+                return response.ok;
+            } catch(e) { return false; }
         }
-
+        
         async function addServiceWithSave(partName, serviceName, cost, carId) {
-            if (!carId) {
-                alert('Ошибка: не выбран автомобиль');
-                return;
-            }
-            
+            if (!carId) { alert('Ошибка: не выбран автомобиль'); return; }
             const success = await addServiceToDB(partName, serviceName, cost, carId);
             if (success) {
                 alert(`✅ Работа "${serviceName.split(' - ')[0]}" добавлена в историю ТО!`);
-                const zone = zones.find(z => z.name === partName);
-                if (zone) {
-                    zone.lastService = new Date().toISOString().split('T')[0];
-                    const nextDate = new Date();
-                    nextDate.setMonth(nextDate.getMonth() + 6);
-                    zone.nextService = nextDate.toISOString().split('T')[0];
-                }
-                const currentZone = zones.find(z => z.name === partName);
-                if (currentZone) showPartInfo(currentZone);
-            } else {
-                alert('❌ Ошибка при сохранении работы.');
-            }
+                const hotspot = hotspots.find(h => h.name === partName);
+                if (hotspot) hotspot.lastService = new Date().toISOString().split('T')[0];
+                showPartInfo(hotspots.find(h => h.name === partName));
+            } else { alert('❌ Ошибка при сохранении работы.'); }
         }
-
+        
         async function addCustomServiceWithSave(partName, carId) {
-            if (!carId) {
-                alert('Ошибка: не выбран автомобиль');
-                return;
-            }
-            
-            const serviceName = prompt('Введите название работы:');
-            if (!serviceName) return;
-            
-            const cost = parseInt(prompt('Введите стоимость (₽):', '0'));
-            if (isNaN(cost)) return;
-            
+            if (!carId) { alert('Ошибка: не выбран автомобиль'); return; }
+            const serviceName = prompt('Введите название работы:'); if (!serviceName) return;
+            const cost = parseInt(prompt('Введите стоимость (₽):', '0')); if (isNaN(cost)) return;
             const success = await addServiceToDB(partName, serviceName, cost, carId);
             if (success) {
                 alert(`✅ Работа "${serviceName}" добавлена в историю ТО!`);
-                const zone = zones.find(z => z.name === partName);
-                if (zone) {
-                    zone.lastService = new Date().toISOString().split('T')[0];
-                    const nextDate = new Date();
-                    nextDate.setMonth(nextDate.getMonth() + 6);
-                    zone.nextService = nextDate.toISOString().split('T')[0];
-                }
-                const currentZone = zones.find(z => z.name === partName);
-                if (currentZone) showPartInfo(currentZone);
-            } else {
-                alert('❌ Ошибка при сохранении работы.');
-            }
+                const hotspot = hotspots.find(h => h.name === partName);
+                if (hotspot) hotspot.lastService = new Date().toISOString().split('T')[0];
+                showPartInfo(hotspots.find(h => h.name === partName));
+            } else { alert('❌ Ошибка при сохранении работы.'); }
         }
-
-        function showPartInfo(zone) {
+        
+        function showPartInfo(hotspot) {
             const panel = document.getElementById('infoPanel');
             const currentCar = cars.find(c => c.id === currentCarId);
-            
             panel.innerHTML = `
                 <div class="panel-header"><div class="led"></div><span>ИНФОРМАЦИЯ О ДЕТАЛИ</span></div>
                 <div class="part-card">
-                    <div class="part-name" style="color: ${zone.color}">${zone.icon} ${zone.name}</div>
+                    <div class="part-name" style="color: ${hotspot.color}">${hotspot.icon} ${hotspot.name}</div>
                     <div class="info-row"><span>🚗 Автомобиль</span><span>${currentCar?.brand} ${currentCar?.model}</span></div>
-                    <div class="info-row"><span>📅 ПОСЛЕДНЕЕ ТО</span><span>${zone.lastService}</span></div>
-                    <div class="info-row"><span>📅 СЛЕДУЮЩЕЕ ТО</span><span>${zone.nextService}</span></div>
-                    <div class="info-row"><span>💰 ПРИМЕРНАЯ СТОИМОСТЬ</span><span>${zone.cost} ₽</span></div>
+                    <div class="info-row"><span>📅 ПОСЛЕДНЕЕ ТО</span><span>${hotspot.lastService}</span></div>
+                    <div class="info-row"><span>📅 СЛЕДУЮЩЕЕ ТО</span><span>${hotspot.nextService}</span></div>
+                    <div class="info-row"><span>💰 СТОИМОСТЬ</span><span>${hotspot.cost} ₽</span></div>
                 </div>
-                <div style="margin-top: 16px;">
-                    <div style="color: #fbbf24;">🔧 РЕКОМЕНДУЕМЫЕ РАБОТЫ</div>
-                    ${zone.services.map(s => `
-                        <div class="service-item" onclick="addServiceWithSave('${zone.name}', '${s}', ${zone.cost}, ${currentCar?.id})">
-                            <span>${s}</span>
-                            <span style="color: #10b981;"><i class="fas fa-save"></i> Сохранить</span>
-                        </div>
-                    `).join('')}
-                </div>
-                <div style="margin-top: 16px;">
-                    <div style="color: #fbbf24;">➕ СВОЯ РАБОТА</div>
-                    <div class="service-item" onclick="addCustomServiceWithSave('${zone.name}', ${currentCar?.id})">
-                        <span><i class="fas fa-plus"></i> Добавить свою работу</span>
-                        <span style="color: #10b981;"><i class="fas fa-save"></i> Сохранить</span>
-                    </div>
-                </div>
+                <div style="margin-top: 16px;"><div style="color: #fbbf24;">🔧 РЕКОМЕНДУЕМЫЕ РАБОТЫ</div>
+                ${hotspot.services.map(s => `<div class="service-item" onclick="addServiceWithSave('${hotspot.name}', '${s}', ${hotspot.cost}, ${currentCar?.id})"><span>${s}</span><span style="color: #10b981;"><i class="fas fa-save"></i> Сохранить</span></div>`).join('')}</div>
+                <div style="margin-top: 16px;"><div style="color: #fbbf24;">➕ СВОЯ РАБОТА</div>
+                <div class="service-item" onclick="addCustomServiceWithSave('${hotspot.name}', ${currentCar?.id})"><span><i class="fas fa-plus"></i> Добавить свою работу</span><span style="color: #10b981;"><i class="fas fa-save"></i> Сохранить</span></div></div>
                 <button onclick="resetPanel()" class="btn-outline" style="margin-top: 16px; width: 100%;">← НАЗАД</button>
             `;
         }
-
+        
         function resetPanel() {
             const panel = document.getElementById('infoPanel');
             panel.innerHTML = `
                 <div class="panel-header"><div class="led"></div><span>СИСТЕМА ДИАГНОСТИКИ</span></div>
-                <div class="placeholder">
-                    <div>🚗</div>
-                    <div>ВЫБЕРИТЕ ДЕТАЛЬ</div>
-                    <div>Нажмите на любую цветную область автомобиля</div>
-                </div>
+                <div class="placeholder"><div>🚗</div><div>ВЫБЕРИТЕ ДЕТАЛЬ</div><div>Нажмите на точку на изображении автомобиля</div></div>
                 <input type="number" id="mileageInput" placeholder="Обновить пробег (км)">
                 <button id="updateMileageBtn" class="btn btn-primary" style="width: 100%; margin-top: 12px;">ОБНОВИТЬ ПРОБЕГ</button>
                 <button onclick="window.location.href='/add-car.html'" class="btn btn-success" style="width: 100%; margin-top: 12px;">➕ ДОБАВИТЬ НОВЫЙ АВТОМОБИЛЬ</button>
             `;
-            
             const updateBtn = document.getElementById('updateMileageBtn');
             if (updateBtn) {
                 updateBtn.onclick = async () => {
                     const input = document.getElementById('mileageInput');
                     if (input && input.value) {
                         const token = localStorage.getItem('car_token');
-                        if (!token || !currentCarId) {
-                            alert('Ошибка: не авторизован или не выбран автомобиль');
-                            return;
-                        }
-                        
+                        if (!token || !currentCarId) { alert('Ошибка'); return; }
                         try {
-                            const response = await fetch(`${API_URL}/cars/${currentCarId}/mileage`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${token}`
-                                },
-                                body: JSON.stringify({ mileage: parseInt(input.value), date: new Date().toISOString().split('T')[0] })
-                            });
-                            
-                            if (response.ok) {
-                                alert('✅ Пробег обновлен!');
-                                await loadCars();
-                                input.value = '';
-                                resetPanel();
-                            } else {
-                                alert('❌ Ошибка при обновлении пробега');
-                            }
-                        } catch (error) {
-                            console.error(error);
-                            alert('❌ Ошибка при обновлении пробега');
-                        }
+                            const response = await fetch(`${API_URL}/cars/${currentCarId}/mileage`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ mileage: parseInt(input.value), date: new Date().toISOString().split('T')[0] }) });
+                            if (response.ok) { alert('✅ Пробег обновлен!'); await loadCars(); input.value = ''; resetPanel(); }
+                            else { alert('❌ Ошибка при обновлении пробега'); }
+                        } catch(e) { alert('❌ Ошибка'); }
                     }
                 };
             }
         }
-
-        // ========== СОБЫТИЯ CANVAS ==========
-        if (canvas) {
-            canvas.addEventListener('click', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                const x = (e.clientX - rect.left) * scaleX;
-                const y = (e.clientY - rect.top) * scaleY;
-                
-                for (const zone of zones) {
-                    if (x >= zone.x && x <= zone.x + zone.w && y >= zone.y && y <= zone.y + zone.h) {
-                        highlightZone(zone);
-                        showPartInfo(zone);
-                        break;
-                    }
-                }
-            });
-            
-            canvas.addEventListener('mousemove', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                const x = (e.clientX - rect.left) * scaleX;
-                const y = (e.clientY - rect.top) * scaleY;
-                
-                let hovered = false;
-                for (const zone of zones) {
-                    if (x >= zone.x && x <= zone.x + zone.w && y >= zone.y && y <= zone.y + zone.h) {
-                        canvas.style.cursor = 'pointer';
-                        highlightZone(zone);
-                        hovered = true;
-                        break;
-                    }
-                }
-                if (!hovered) {
-                    canvas.style.cursor = 'default';
-                    drawCar();
-                }
-            });
-        }
-
-        // ========== ИНИЦИАЛИЗАЦИЯ ==========
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 DOM загружен');
-            
-            const addBtn = document.getElementById('addCarBtn');
-            if (addBtn) {
-                addBtn.onclick = () => window.location.href = '/add-car.html';
-            }
-            
-            const carSelect = document.getElementById('carSelect');
-            if (carSelect) {
-                carSelect.onchange = (e) => {
-                    currentCarId = parseInt(e.target.value);
-                    drawCar();
-                };
-            }
-            
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            loadHotspotsFromStorage();
+            await waitForImage();
+            await renderHotspots();
+            await loadCars();
+            resetPanel();
+            document.getElementById('addCarBtn').onclick = () => window.location.href = '/add-car.html';
+            document.getElementById('carSelect').onchange = (e) => { currentCarId = parseInt(e.target.value); };
+            toggleEditBtn.onclick = () => setEditMode(!editMode);
+            savePositionsBtn.onclick = saveHotspotsToStorage;
+            resetPositionsBtn.onclick = resetHotspots;
             const isAuth = !!localStorage.getItem('car_token');
             const authButtons = document.getElementById('authButtons');
             const userMenu = document.getElementById('userMenu');
             const userNameSpan = document.getElementById('userName');
-            
             if (isAuth) {
                 if (authButtons) authButtons.style.display = 'none';
                 if (userMenu) userMenu.style.display = 'flex';
-                try {
-                    const user = JSON.parse(localStorage.getItem('car_user') || '{}');
-                    if (userNameSpan) userNameSpan.textContent = user?.username || user?.full_name || '';
-                } catch(e) {}
+                try { const user = JSON.parse(localStorage.getItem('car_user') || '{}'); if (userNameSpan) userNameSpan.textContent = user?.username || user?.full_name || ''; } catch(e) {}
             } else {
                 if (authButtons) authButtons.style.display = 'flex';
                 if (userMenu) userMenu.style.display = 'none';
             }
-            
-            loadCars();
-            resetPanel();
         });
         
-        // Делаем функции глобальными для onclick
         window.addServiceWithSave = addServiceWithSave;
         window.addCustomServiceWithSave = addCustomServiceWithSave;
     </script>

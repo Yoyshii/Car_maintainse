@@ -11,12 +11,14 @@
 <body>
     <div class="app">
         <nav class="navbar">
-            <a href="/" class="nav-brand" style="text-decoration: none; display: flex; align-items: center; gap: 12px;">
-                <i class="fas fa-car"></i>
-                <span>Car Maintenance Visualizer</span>
-            </a>
+            <div class="nav-brand">
+                <a href="/" style="text-decoration: none; display: flex; align-items: center; gap: 12px; color: inherit;">
+                    <i class="fas fa-car"></i>
+                    <span>Car Maintenance Visualizer</span>
+                </a>
+            </div>
             <div class="nav-menu">
-                <a href="/" class="nav-link"><i class="fas fa-home"></i> Главная</a>
+                <a href="/dashboard.html" class="nav-link active"><i class="fas fa-tachometer-alt"></i> Главная</a>
                 <a href="/visualization.html" class="nav-link"><i class="fas fa-cube"></i> 3D Визуализация</a>
                 <a href="/history.html" class="nav-link"><i class="fas fa-history"></i> История ТО</a>
                 <a href="/reports.html" class="nav-link"><i class="fas fa-chart-bar"></i> Отчеты</a>
@@ -37,28 +39,28 @@
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-car"></i></div>
                     <div class="stat-info">
-                        <div class="stat-value" id="carsCount">1</div>
+                        <div class="stat-value" id="carsCount">0</div>
                         <div class="stat-label">Автомобилей</div>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-road"></i></div>
                     <div class="stat-info">
-                        <div class="stat-value" id="totalMileage">15,247</div>
+                        <div class="stat-value" id="totalMileage">0</div>
                         <div class="stat-label">Общий пробег (км)</div>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-ruble-sign"></i></div>
                     <div class="stat-info">
-                        <div class="stat-value" id="totalCost">₽6,200</div>
+                        <div class="stat-value" id="totalCost">0 ₽</div>
                         <div class="stat-label">Расходы на ТО</div>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-clock"></i></div>
                     <div class="stat-info">
-                        <div class="stat-value" id="upcomingServices">3</div>
+                        <div class="stat-value" id="upcomingServices">0</div>
                         <div class="stat-label">Предстоящих ТО</div>
                     </div>
                 </div>
@@ -80,7 +82,137 @@
         </footer>
     </div>
 
-    <script src="/js/auth.js"></script>
-    <script src="/js/dashboard.js"></script>
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        
+        let allCars = [];
+        let allHistory = [];
+        
+        async function loadDashboardData() {
+            const token = localStorage.getItem('car_token');
+            if (!token) {
+                console.log('Нет токена');
+                return;
+            }
+            
+            try {
+                // Загружаем автомобили
+                const carsRes = await fetch(`${API_URL}/cars`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (carsRes.ok) {
+                    allCars = await carsRes.json();
+                    console.log('Загружено автомобилей:', allCars.length);
+                }
+                
+                // Загружаем историю ТО
+                const historyRes = await fetch(`${API_URL}/history`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (historyRes.ok) {
+                    allHistory = await historyRes.json();
+                    console.log('Загружено записей ТО:', allHistory.length);
+                }
+                
+                updateStats();
+                updateRecentList();
+                
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
+            }
+        }
+        
+        function updateStats() {
+            // Общее количество автомобилей
+            document.getElementById('carsCount').innerText = allCars.length;
+            
+            // Общий пробег
+            const totalMileage = allCars.reduce((sum, car) => sum + (car.mileage || 0), 0);
+            document.getElementById('totalMileage').innerText = totalMileage.toLocaleString();
+            
+            // Общая стоимость ТО
+            const totalCost = allHistory.reduce((sum, record) => sum + (record.cost || 0), 0);
+            document.getElementById('totalCost').innerHTML = totalCost.toLocaleString() + ' ₽';
+            
+            // Предстоящие ТО (заглушка, можно реализовать позже)
+            document.getElementById('upcomingServices').innerText = '0';
+        }
+        
+        function updateRecentList() {
+            const container = document.getElementById('recentList');
+            
+            if (!allHistory || allHistory.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                        Нет записей о техническом обслуживании
+                        <p style="margin-top: 16px; font-size: 13px;">
+                            <a href="/visualization.html" style="color: #4f46e5;">Добавьте первую запись</a> через 3D визуализацию
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Берём последние 5 записей
+            const lastRecords = [...allHistory].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+            
+            container.innerHTML = lastRecords.map(record => {
+                // Находим автомобиль по id
+                const car = allCars.find(c => c.id === record.car_id);
+                const carName = car ? `${car.brand} ${car.model}` : 'Неизвестный автомобиль';
+                
+                return `
+                    <div class="service-row" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border);">
+                        <div style="flex: 2;">
+                            <div style="font-weight: 600;">${record.service_name || record.service_type || 'Обслуживание'}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">${carName}</div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            ${record.mileage ? record.mileage.toLocaleString() + ' км' : '-'}
+                        </div>
+                        <div style="flex: 1; text-align: right; color: #10b981; font-weight: 600;">
+                            ${record.cost ? record.cost.toLocaleString() + ' ₽' : '-'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updateUI() {
+            const isAuth = !!localStorage.getItem('car_token');
+            const authButtons = document.getElementById('authButtons');
+            const userMenu = document.getElementById('userMenu');
+            const userNameSpan = document.getElementById('userName');
+            const welcomeNameSpan = document.getElementById('welcomeName');
+            
+            if (isAuth) {
+                if (authButtons) authButtons.style.display = 'none';
+                if (userMenu) userMenu.style.display = 'flex';
+                try {
+                    const user = JSON.parse(localStorage.getItem('car_user') || '{}');
+                    const displayName = user?.full_name || user?.username || '';
+                    if (userNameSpan) userNameSpan.textContent = displayName;
+                    if (welcomeNameSpan) welcomeNameSpan.textContent = displayName;
+                } catch(e) {}
+                loadDashboardData();
+            } else {
+                if (authButtons) authButtons.style.display = 'flex';
+                if (userMenu) userMenu.style.display = 'none';
+                document.getElementById('recentList').innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-lock" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                        Войдите в аккаунт для просмотра данных
+                        <p style="margin-top: 16px;"><a href="/login.html" class="btn btn-primary">Войти</a></p>
+                    </div>
+                `;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', updateUI);
+        window.addEventListener('storage', updateUI);
+    </script>
 </body>
 </html>

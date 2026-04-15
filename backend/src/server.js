@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../../frontend/public')));
+app.use('/assets', express.static(path.join(__dirname, '../../frontend/public/assets')));
 
 // Импортируем роуты
 const authRoutes = require('./routes/auth');
