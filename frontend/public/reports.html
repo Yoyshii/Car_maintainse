@@ -252,5 +252,37 @@
         document.addEventListener('DOMContentLoaded', updateUI);
         window.addEventListener('storage', updateUI);
     </script>
+    <script>
+    // Универсальный обработчик кнопки выхода
+    document.addEventListener('DOMContentLoaded', function() {
+        // Находим кнопку выхода на странице
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        if (logoutBtn) {
+            console.log('🔍 Кнопка выхода найдена, добавляем обработчик');
+            
+            // Удаляем все старые обработчики
+            const newLogoutBtn = logoutBtn.cloneNode(true);
+            logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+            
+            // Добавляем новый обработчик
+            newLogoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('🚪 Выход из системы');
+                
+                // Очищаем localStorage
+                localStorage.removeItem('car_token');
+                localStorage.removeItem('car_user');
+                
+                // Перенаправляем на главную
+                window.location.href = '/';
+            });
+        } else {
+            console.warn('⚠️ Кнопка выхода не найдена на этой странице');
+        }
+    });
+</script>
 </body>
 </html>

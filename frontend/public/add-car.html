@@ -61,6 +61,22 @@
             margin-bottom: 24px;
             color: var(--accent-blue);
         }
+        .form-group select,
+        .form-group select option {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        .form-group select option {
+            padding: 10px;
+        }
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+        select option {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+        }
     </style>
 </head>
 <body>
@@ -140,16 +156,29 @@
         </footer>
     </div>
 
-    <script src="/js/auth.js"></script>
     <script>
-        const API_URL = 'http://localhost:5000/api';
+        // Полностью независимый скрипт без конфликтов
         
-        document.getElementById('color').addEventListener('input', function(e) {
-            document.getElementById('colorPreview').style.background = e.target.value;
-        });
+        // Функции для работы с авторизацией
+        function getToken() {
+            return localStorage.getItem('car_token');
+        }
         
+        function isAuthenticated() {
+            return !!getToken();
+        }
+        
+        function getUser() {
+            try {
+                return JSON.parse(localStorage.getItem('car_user') || '{}');
+            } catch {
+                return {};
+            }
+        }
+        
+        // Обновление UI
         function updateUI() {
-            const isAuth = window.auth && window.auth.isAuthenticated();
+            const isAuth = isAuthenticated();
             const authButtons = document.getElementById('authButtons');
             const userMenu = document.getElementById('userMenu');
             const userNameSpan = document.getElementById('userName');
@@ -157,7 +186,7 @@
             if (isAuth) {
                 if (authButtons) authButtons.style.display = 'none';
                 if (userMenu) userMenu.style.display = 'flex';
-                const user = window.auth.getUser();
+                const user = getUser();
                 if (userNameSpan) userNameSpan.textContent = user?.username || user?.full_name || '';
             } else {
                 if (authButtons) authButtons.style.display = 'flex';
@@ -166,51 +195,88 @@
             }
         }
         
-        document.getElementById('addCarForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const token = window.auth.getToken();
-            if (!token) {
-                alert('Необходимо войти в аккаунт');
-                window.location.href = '/login.html';
-                return;
-            }
-            
-            const carData = {
-                brand: document.getElementById('brand').value,
-                model: document.getElementById('model').value,
-                year: parseInt(document.getElementById('year').value),
-                license_plate: document.getElementById('license_plate').value,
-                color: document.getElementById('color').value,
-                mileage: parseInt(document.getElementById('mileage').value),
-                engine_type: document.getElementById('engine_type').value
-            };
-            
-            try {
-                const response = await fetch(`${API_URL}/cars`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(carData)
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Ошибка при сохранении');
-                }
-                
-                const newCar = await response.json();
-                alert(`✅ Автомобиль ${carData.brand} ${carData.model} успешно добавлен!`);
-                window.location.href = '/visualization.html';
-                
-            } catch (error) {
-                console.error(error);
-                alert('❌ Ошибка при добавлении автомобиля: ' + error.message);
-            }
+        // Предпросмотр цвета
+        document.getElementById('color').addEventListener('input', function(e) {
+            document.getElementById('colorPreview').style.background = e.target.value;
         });
         
+        // Обработчик отправки формы
+        const form = document.getElementById('addCarForm');
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const token = getToken();
+                if (!token) {
+                    alert('Необходимо войти в аккаунт');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                const carData = {
+                    brand: document.getElementById('brand').value,
+                    model: document.getElementById('model').value,
+                    year: parseInt(document.getElementById('year').value),
+                    license_plate: document.getElementById('license_plate').value,
+                    color: document.getElementById('color').value,
+                    mileage: parseInt(document.getElementById('mileage').value),
+                    engine_type: document.getElementById('engine_type').value
+                };
+                
+                // Проверка обязательных полей
+                if (!carData.brand || !carData.model) {
+                    alert('Пожалуйста, заполните марку и модель автомобиля');
+                    return;
+                }
+                
+                try {
+                    console.log('Отправка данных:', carData);
+                    
+                    const response = await fetch('http://localhost:5000/api/cars', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(carData)
+                    });
+                    
+                    console.log('Статус ответа:', response.status);
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Ошибка при сохранении');
+                    }
+                    
+                    const newCar = await response.json();
+                    console.log('Ответ сервера:', newCar);
+                    
+                    alert(`✅ Автомобиль ${carData.brand} ${carData.model} успешно добавлен!`);
+                    
+                    // Устанавливаем флаг, что нужно обновить список
+                    localStorage.setItem('car_list_needs_update', 'true');
+                    
+                    // Переходим на страницу визуализации
+                    window.location.href = '/visualization.html';
+                    
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    alert('❌ Ошибка при добавлении автомобиля: ' + error.message);
+                }
+            });
+        }
+        
+        // Кнопка выхода
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('car_token');
+                localStorage.removeItem('car_user');
+                window.location.href = '/';
+            });
+        }
+        
+        // Инициализация
         document.addEventListener('DOMContentLoaded', updateUI);
     </script>
 </body>
